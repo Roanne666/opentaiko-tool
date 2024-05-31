@@ -1,16 +1,34 @@
 import { exec } from "child_process";
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
-import { AddressInfo } from "net";
-import test from "@/test";
+import type { AddressInfo } from "net";
+import { type Song, loadSongs } from "./song";
+import { createReadStream } from "fs";
 
 const app = express();
 
 app.use(express.static("dist"));
 
 app.get("/api/test", (req: Request, res: Response, next: NextFunction) => {
-  test
   res.send({ info: "Hello World!" });
+});
+
+app.get("/api/songs", async (req: Request, res: Response, next: NextFunction) => {
+  const songs: Song[] = await loadSongs("D:\\Game\\OpenTaiko-v0.5.3.1\\Songs");
+  res.send(songs);
+});
+
+app.get("/api/playSong", (req: Request, res: Response, next: NextFunction) => {
+  const path = req.query.songPath as string;
+
+  const chunks: Buffer[] = [];
+  const rs = createReadStream(path, { flags: "r", autoClose: true, start: 0 });
+
+  rs.on("data", (chunk) => chunks.push(chunk as Buffer));
+  rs.on("end", () => {
+    const bs = Buffer.concat(chunks).toString("base64");
+    res.send(bs);
+  });
 });
 
 if (process.env.NODE_ENV) {

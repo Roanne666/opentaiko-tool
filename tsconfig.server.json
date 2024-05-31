@@ -1,15 +1,15 @@
 {
-  "include": ["server"],
+  "include": ["server/**/*.ts"],
   "exclude": [],
   "compilerOptions": {
     "module": "NodeNext",
     "target": "ES5",
-    "lib": ["ES6"],
+    "lib": ["ES6","DOM"],
     "declaration": false,
     "esModuleInterop": true,
     "removeComments": true,
     "strict": true,
-    "rootDir": "./server",
+    "rootDir": "server",
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
