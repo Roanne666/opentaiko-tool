@@ -1,0 +1,19 @@
+{
+  "include": ["server"],
+  "exclude": [],
+  "compilerOptions": {
+    "module": "NodeNext",
+    "target": "ES5",
+    "lib": ["ES6"],
+    "declaration": false,
+    "esModuleInterop": true,
+    "removeComments": true,
+    "strict": true,
+    "rootDir": "./server",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./server/*"]
+    }
+  }
+}
