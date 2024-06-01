@@ -93,19 +93,26 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
   const content = readFileSync(filePath).toString();
   const lines = content.split("\n");
 
+  let currentScoreInfo: ScoreInfo = song.oni;
+
   for (let i = 0; i < lines.length - 1; i++) {
     const line = lines[i].toLowerCase();
 
     if (line.includes("course:edit") || line.includes("course:extreme") || line.includes("course:4")) {
-      song.extreme = { level: Number(lines[i + 1].split(":")[1].trim()), score: 0 };
+      song.extreme = { level: 0, score: 0 };
+      currentScoreInfo = song.extreme;
     } else if (line.includes("course:oni") || line.includes("course:3")) {
-      song.oni.level = Number(lines[i + 1].split(":")[1].trim());
+      currentScoreInfo = song.oni;
     } else if (line.includes("course:hard") || line.includes("course:2")) {
-      song.hard.level = Number(lines[i + 1].split(":")[1].trim());
+      currentScoreInfo = song.hard;
     } else if (line.includes("course:normal") || line.includes("course:1")) {
-      song.normal.level = Number(lines[i + 1].split(":")[1].trim());
+      currentScoreInfo = song.normal;
     } else if (line.includes("course:easy") || line.includes("course:0")) {
-      song.easy.level = Number(lines[i + 1].split(":")[1].trim());
+      currentScoreInfo = song.easy;
+    }
+
+    if (line.includes("level:")) {
+      currentScoreInfo.level = Number(lines[i].split(":")[1].trim());
     }
   }
 
