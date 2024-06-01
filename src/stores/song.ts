@@ -20,8 +20,6 @@ export async function fetchSongs() {
   songs.push(...newSongs);
 }
 
-fetchSongs();
-
 export const currentSongUrl = ref("");
 
 export async function getSongUrl(songPath: string) {

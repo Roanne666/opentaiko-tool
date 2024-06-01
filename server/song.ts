@@ -91,30 +91,21 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
   };
 
   const content = readFileSync(filePath).toString();
-  const lines = content.split("\r\n");
+  const lines = content.split("\n");
 
-  for (let i = 0; i < lines.length; i++) {
-    switch (lines[i]) {
-      case "COURSE:Extreme":
-      case "COURSE:4":
-        song.extreme = { level: Number(lines[i + 1].split(":")[1].trim()), score: 0 };
-        break;
-      case "COURSE:Oni":
-      case "COURSE:3":
-        song.oni.level = Number(lines[i + 1].split(":")[1].trim());
-        break;
-      case "COURSE:Hard":
-      case "COURSE:2":
-        song.hard.level = Number(lines[i + 1].split(":")[1].trim());
-        break;
-      case "COURSE:Normal":
-      case "COURSE:1":
-        song.normal.level = Number(lines[i + 1].split(":")[1].trim());
-        break;
-      case "COURSE:Easy":
-      case "COURSE:0":
-        song.easy.level = Number(lines[i + 1].split(":")[1].trim());
-        break;
+  for (let i = 0; i < lines.length - 1; i++) {
+    const line = lines[i].toLowerCase();
+
+    if (line.includes("course:edit") || line.includes("course:extreme") || line.includes("course:4")) {
+      song.extreme = { level: Number(lines[i + 1].split(":")[1].trim()), score: 0 };
+    } else if (line.includes("course:oni") || line.includes("course:3")) {
+      song.oni.level = Number(lines[i + 1].split(":")[1].trim());
+    } else if (line.includes("course:hard") || line.includes("course:2")) {
+      song.hard.level = Number(lines[i + 1].split(":")[1].trim());
+    } else if (line.includes("course:normal") || line.includes("course:1")) {
+      song.normal.level = Number(lines[i + 1].split(":")[1].trim());
+    } else if (line.includes("course:easy") || line.includes("course:0")) {
+      song.easy.level = Number(lines[i + 1].split(":")[1].trim());
     }
   }
 
