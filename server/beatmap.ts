@@ -42,10 +42,8 @@ function parseBeatmapPart(lines: string[], start: number, barline: boolean): { e
     const line = lines[i].toLowerCase().trim();
 
     if (partStart) {
-      if (line.includes("#")) {
-        return { end: i, beatmapPart };
-      }
-      if (line.includes(",")) {
+      if (line.includes("#")) return { end: i - 1, beatmapPart };
+      else if (line.includes(",")) {
         beatmapPart.notes.push(
           line
             .split(",")[0]
@@ -54,7 +52,15 @@ function parseBeatmapPart(lines: string[], start: number, barline: boolean): { e
         );
       }
     } else {
-      if (line.includes(",")) {
+      if (line.includes("#scroll")) beatmapPart.scroll = Number(line.split(" ")[1]);
+      else if (line.includes("#bpmchange")) beatmapPart.bpmChange = Number(line.split(" ")[1]);
+      else if (line.includes("#measure")) {
+        const measureStrings = line.split(" ")[1].split("/");
+        beatmapPart.measure = [Number(measureStrings[0]), Number(measureStrings[1])];
+      } else if (line.includes("#gogostart")) beatmapPart.gogoTime = true;
+      else if (line.includes("#barlineoff")) beatmapPart.barline = false;
+      else if (line.includes("#barlineon")) beatmapPart.barline = true;
+      else if (line.includes(",")) {
         partStart = true;
         beatmapPart.notes.push(
           line
@@ -63,15 +69,6 @@ function parseBeatmapPart(lines: string[], start: number, barline: boolean): { e
             .map((s) => Number(s))
         );
       }
-      if (line.includes("#scroll")) beatmapPart.scroll = Number(line.split(" ")[1]);
-      if (line.includes("#bpmchange")) beatmapPart.bpmChange = Number(line.split(" ")[1]);
-      if (line.includes("#measure")) {
-        const measureStrings = line.split(" ")[1].split("/");
-        beatmapPart.measure = [Number(measureStrings[0]), Number(measureStrings[1])];
-      }
-      if (line.includes("#gogostart")) beatmapPart.gogoTime = true;
-      if (line.includes("#barlineoff")) beatmapPart.barline = false;
-      if (line.includes("#barlineon")) beatmapPart.barline = true;
     }
   }
   return { end: lines.length - 1, beatmapPart };
