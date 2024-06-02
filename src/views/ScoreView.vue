@@ -29,9 +29,8 @@
       <n-radio-group v-model:value="levelSelect" name="radiogroup">
         <n-space>
           <span>等级：</span>
-          <n-radio :value="0"> 全部 </n-radio>
           <n-radio v-for="l of levels" :key="`${l}`" :value="l">
-            {{ l }}
+            {{ l === 0 ? "全部" : l }}
           </n-radio>
         </n-space>
       </n-radio-group>
@@ -56,34 +55,19 @@
 </template>
 
 <script setup lang="ts">
-import { h, reactive, ref, watch } from "vue";
+import { h, ref, watch } from "vue";
 import { NButton, NDataTable, NIcon, type DataTableColumn, type DataTableColumnGroup, NCheckboxGroup, NSpace, NCheckbox, NRadioGroup, NRadio, NFlex } from "naive-ui";
-import { currentSongUrl, genre, getSongUrl, allSongs, showSongs } from "@/stores/song";
+import { currentSongUrl, genre, getSongUrl, allSongs, showSongs, type ScoreTypes, levels, scores, type DifficultyTypes, type LevelTypes } from "@/stores/song";
 import type { ScoreInfo, Song } from "@server/song";
 import { PlayCircleOutline as PlayIcon, PauseCircleOutline as PauseIcon } from "@vicons/ionicons5";
-
-const levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const scores = {
-  全部: [0, 9999999],
-  未合格: [0, 500000],
-  白粋: [500000, 600000],
-  銅粋: [600000, 700000],
-  銀粋: [700000, 800000],
-  金雅: [800000, 900000],
-  桃雅: [900000, 950000],
-  紫雅: [950000, 1000000],
-  極: [1000000, 9999999],
-} as const;
-
-type scoresType = keyof typeof scores;
 
 const audioRef = ref<HTMLAudioElement>();
 const currentSong = ref("");
 
 const genreSelect = ref(genre);
-const difficultySelect = ref<"all" | "easy" | "normal" | "hard" | "oni" | "extreme">("all");
-const levelSelect = ref(0);
-const scoreSelcet = ref<scoresType>("全部");
+const difficultySelect = ref<DifficultyTypes>("all");
+const levelSelect = ref<LevelTypes>(0);
+const scoreSelcet = ref<ScoreTypes>("全部");
 
 watch([genreSelect, difficultySelect, levelSelect, scoreSelcet], () => {
   showSongs.length = 0;
@@ -91,9 +75,9 @@ watch([genreSelect, difficultySelect, levelSelect, scoreSelcet], () => {
     ...allSongs.filter((s) => {
       let isMatch = false;
 
-      const d = difficultySelect.value;
+      const currentDifficulty = difficultySelect.value;
 
-      if (d === "all") {
+      if (currentDifficulty === "all") {
         let levelMatch =
           levelSelect.value === 0 ||
           s.easy.level === levelSelect.value ||
@@ -107,20 +91,23 @@ watch([genreSelect, difficultySelect, levelSelect, scoreSelcet], () => {
 
         let scoreMatch = scoreSelcet.value === "全部";
         if (!scoreMatch) {
-          const easyLevelMatch = s.easy.score >= scores[scoreSelcet.value][0] && s.easy.score < scores[scoreSelcet.value][1];
-          const normalLevelMatch = s.normal.score >= scores[scoreSelcet.value][0] && s.normal.score < scores[scoreSelcet.value][1];
-          const hardLevelMatch = s.hard.score >= scores[scoreSelcet.value][0] && s.hard.score < scores[scoreSelcet.value][1];
-          const oniLevelMatch = s.oni.score >= scores[scoreSelcet.value][0] && s.oni.score < scores[scoreSelcet.value][1];
-          const extremeLevelMatch = s.extreme ? (s.extreme as ScoreInfo).score >= scores[scoreSelcet.value][0] && s.oni.level < scores[scoreSelcet.value][1] : false;
-          scoreMatch = easyLevelMatch || normalLevelMatch || hardLevelMatch || oniLevelMatch || extremeLevelMatch;
+          const anyMatch = ["easy", "normal", "hard", "oni", "extreme"].find((d) => {
+            if (d === "easy" || d === "normal" || d === "hard" || d === "oni") {
+              return s[d].score >= scores[scoreSelcet.value][0] && s[d].score < scores[scoreSelcet.value][1];
+            } else if (d === "extreme" && s.extreme) {
+              return (s.extreme as ScoreInfo).score >= scores[scoreSelcet.value][0] && (s.extreme as ScoreInfo).level < scores[scoreSelcet.value][1];
+            }
+            return false;
+          });
+          scoreMatch = anyMatch !== undefined;
         }
 
         isMatch = levelMatch && scoreMatch;
-      } else if (s[d]) {
-        const levelMatch = levelSelect.value === 0 || (s[d] as ScoreInfo).level === levelSelect.value;
+      } else if (s[currentDifficulty]) {
+        const levelMatch = levelSelect.value === 0 || (s[currentDifficulty] as ScoreInfo).level === levelSelect.value;
         let scoreMatch = scoreSelcet.value === "全部";
         if (!scoreMatch) {
-          scoreMatch = (s[d] as ScoreInfo).score >= scores[scoreSelcet.value][0] && (s[d] as ScoreInfo).score < scores[scoreSelcet.value][1];
+          scoreMatch = (s[currentDifficulty] as ScoreInfo).score >= scores[scoreSelcet.value][0] && (s[currentDifficulty] as ScoreInfo).score < scores[scoreSelcet.value][1];
         }
         isMatch = levelMatch && scoreMatch;
       }
@@ -130,7 +117,7 @@ watch([genreSelect, difficultySelect, levelSelect, scoreSelcet], () => {
   );
 });
 
-const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = reactive([
+const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
   {
     title: "曲名",
     key: "name",
@@ -174,10 +161,10 @@ const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = reactive
   createDiffultyColumn("松", "hard"),
   createDiffultyColumn("鬼", "oni"),
   createDiffultyColumn("里", "extreme"),
-]);
+];
 
 function createDiffultyColumn(title: string, key: string): DataTableColumnGroup<Song> {
-  return reactive({
+  return {
     title,
     key,
     align: "center",
@@ -186,18 +173,12 @@ function createDiffultyColumn(title: string, key: string): DataTableColumnGroup<
         title: "等级",
         key: `${key}level`,
         align: "center",
-        width: 90,
+        width: 80,
         render(row, rowIndex) {
           if (key === "easy" || key === "normal" || key === "hard" || key === "oni" || key === "extreme") {
             return row[key] ? `${row[key]?.level}★` : "";
           }
           return "";
-        },
-        sorter(rowA, rowB) {
-          if (key === "easy" || key === "normal" || key === "hard" || key === "oni" || key === "extreme") {
-            return (rowA[key]?.level || 0) - (rowB[key]?.level || 0);
-          }
-          return 0;
         },
       },
       {
@@ -219,25 +200,6 @@ function createDiffultyColumn(title: string, key: string): DataTableColumnGroup<
         },
       },
     ],
-  });
-}
-
-function getScoreRank(score: number) {
-  if (score >= 1000000) {
-    return "極";
-  } else if (score >= 950000) {
-    return "紫雅";
-  } else if (score >= 900000) {
-    return "桃雅";
-  } else if (score >= 800000) {
-    return "金雅";
-  } else if (score >= 700000) {
-    return "銀粋";
-  } else if (score >= 600000) {
-    return "銅粋";
-  } else if (score >= 500000) {
-    return "白粋";
-  }
-  return "未合格";
+  };
 }
 </script>

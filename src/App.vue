@@ -4,9 +4,9 @@ import { RouterLink, RouterView } from "vue-router";
 import { NLayout, NLayoutSider, NLayoutContent, NMenu, type MenuOption, NIcon } from "naive-ui";
 import { HomeOutline as HomeIcon, MusicalNotesOutline as MusicIcon, BarcodeOutline as PreviewIcon } from "@vicons/ionicons5";
 import { h, type Component } from "vue";
-import { fetchSongs } from "@/stores/song";
+import { fetchAllSongs } from "@/stores/song";
 
-fetchSongs();
+fetchAllSongs();
 
 window.addEventListener("beforeunload", async (event) => {
   await fetch("/api/closeServer");
