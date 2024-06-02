@@ -63,6 +63,7 @@ export async function fetchAllSongs() {
   });
 
   const newSongs = await res.json();
+  console.log(newSongs)
 
   allSongs.length = 0;
   allSongs.push(...newSongs);

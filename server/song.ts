@@ -1,20 +1,29 @@
-import { statSync, readdirSync, readFileSync } from "fs";
+import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
+import { BeatmapPart, parseBeatmap } from "./beatmap";
+import { isDir } from "./utils";
 
-export type ScoreInfo = {
+export type DifficultyInfo = {
   level: number;
   score: number;
+  scoreInit: number;
+  scoreDiff: number;
+  balloon: number[];
+  beatmap: BeatmapPart[];
 };
 
 export type Song = {
   name: string;
+  bpm: number;
+  wave: string;
+  offset: number;
   dir: string;
   genre: string;
-  easy: ScoreInfo;
-  normal: ScoreInfo;
-  hard: ScoreInfo;
-  oni: ScoreInfo;
-  extreme?: ScoreInfo;
+  easy: DifficultyInfo;
+  normal: DifficultyInfo;
+  hard: DifficultyInfo;
+  oni: DifficultyInfo;
+  extreme?: DifficultyInfo;
 };
 
 const defaultExclude = ["S1 Dan-i Dojo", "S2 Taiko Towers", "X1 Favorite", "X2 Recent", "X3 Search By Difficulty"];
@@ -30,6 +39,7 @@ async function parseSongs(path: string, exclude: string[], use1P = true) {
   return new Promise<Song[]>(async (resolve) => {
     const songs: Song[] = [];
 
+    // 读取类目文件夹
     const genreDirs = readdirSync(path);
 
     for (const g of genreDirs) {
@@ -39,6 +49,7 @@ async function parseSongs(path: string, exclude: string[], use1P = true) {
       const stat = await isDir(genreDirPath);
       if (!stat) continue;
 
+      // 读取歌曲文件夹
       const songDirs = readdirSync(genreDirPath);
       if (!songDirs.includes("box.def")) continue;
       const { genre } = parseBoxDef(join(genreDirPath, "box.def"));
@@ -48,6 +59,7 @@ async function parseSongs(path: string, exclude: string[], use1P = true) {
         const stat = await isDir(songDirPath);
         if (!stat) continue;
 
+        // 读取歌曲相关文件
         const songFiles = readdirSync(songDirPath);
         if (!songFiles.find((s) => s.includes(".tja"))) continue;
 
@@ -60,15 +72,17 @@ async function parseSongs(path: string, exclude: string[], use1P = true) {
           if (!songFiles.find((s) => (use1P ? s.includes("tja1P.score") : s.includes("tja2P.score")))) continue;
           const scorePath = use1P ? join(songDirPath, songName + ".tja1P.score.ini") : join(songDirPath, songName + ".tja2P.score.ini");
           const scores = parseScores(scorePath);
-          song.easy.score = scores.easy;
-          song.normal.score = scores.normal;
-          song.hard.score = scores.hard;
-          song.oni.score = scores.oni;
-          if (song.extreme) song.extreme.score = scores.extreme;
+
+          for (const d in scores) {
+            if (d === "easy" || d === "normal" || d === "hard" || d === "oni") {
+              song[d].score = scores[d];
+            } else if (d === "extreme" && song.extreme) {
+              song.extreme.score = scores.extreme;
+            }
+          }
         }
       }
     }
-
     resolve(songs);
   });
 }
@@ -84,35 +98,64 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
     name: songName,
     dir,
     genre,
-    easy: { level: 0, score: 0 },
-    normal: { level: 0, score: 0 },
-    hard: { level: 0, score: 0 },
-    oni: { level: 0, score: 0 },
+    bpm: 0,
+    offset: 0,
+    wave: join(dir, songName + ".ogg"),
+    easy: { level: 0, score: 0, scoreInit: 0, scoreDiff: 0, balloon: [], beatmap: [] },
+    normal: { level: 0, score: 0, scoreInit: 0, scoreDiff: 0, balloon: [], beatmap: [] },
+    hard: { level: 0, score: 0, scoreInit: 0, scoreDiff: 0, balloon: [], beatmap: [] },
+    oni: { level: 0, score: 0, scoreInit: 0, scoreDiff: 0, balloon: [], beatmap: [] },
   };
 
   const content = readFileSync(filePath).toString();
   const lines = content.split("\n");
 
-  let currentScoreInfo: ScoreInfo = song.oni;
+  /**
+   * 当前难度信息（默认魔王）
+   */
+  let dInfo: DifficultyInfo = song.oni;
 
   for (let i = 0; i < lines.length - 1; i++) {
-    const line = lines[i].toLowerCase();
+    const line = lines[i].toLowerCase().trim();
 
-    if (line.includes("course:edit") || line.includes("course:extreme") || line.includes("course:4")) {
-      song.extreme = { level: 0, score: 0 };
-      currentScoreInfo = song.extreme;
-    } else if (line.includes("course:oni") || line.includes("course:3")) {
-      currentScoreInfo = song.oni;
-    } else if (line.includes("course:hard") || line.includes("course:2")) {
-      currentScoreInfo = song.hard;
-    } else if (line.includes("course:normal") || line.includes("course:1")) {
-      currentScoreInfo = song.normal;
-    } else if (line.includes("course:easy") || line.includes("course:0")) {
-      currentScoreInfo = song.easy;
+    if (line.includes("bpm")) {
+      song.bpm = Number(line.split(":")[1]);
     }
 
-    if (line.includes("level:")) {
-      currentScoreInfo.level = Number(lines[i].split(":")[1].trim());
+    if (line.includes("offset")) {
+      song.offset = Number(line.split(":")[1]);
+    }
+
+    if (line.includes("course")) {
+      const d = line.split(":")[1];
+      if (d === "edit" || d === "extreme" || d === "4") {
+        song.extreme = { level: 0, score: 0, scoreInit: 0, scoreDiff: 0, balloon: [], beatmap: [] };
+        dInfo = song.extreme;
+      } else if (d === "oni" || d === "3") {
+        dInfo = song.oni;
+      } else if (d === "hard" || d === "2") {
+        dInfo = song.hard;
+      } else if (d === "normal" || d === "1") {
+        dInfo = song.normal;
+      } else if (d === "easy" || d === "0") {
+        dInfo = song.easy;
+      }
+    }
+
+    if (line.includes("level")) dInfo.level = Number(line.split(":")[1]);
+    if (line.includes("balloon")) {
+      dInfo.balloon = line
+        .split(":")[1]
+        .split(",")
+        .map((s) => Number(s));
+    }
+    if (line.includes("scoreinit")) dInfo.scoreInit = Number(line.split(":")[1]);
+    if (line.includes("scorediff")) dInfo.scoreDiff = Number(line.split(":")[1]);
+
+    if (line.includes("#start")) {
+      const { end, beatmap } = parseBeatmap(lines, i);
+      dInfo.beatmap = beatmap;
+      i = end;
     }
   }
 
@@ -138,11 +181,4 @@ function parseScores(path: string) {
     if (l.includes("HiScore5")) scores.extreme = Number(l.split("=")[1]);
   }
   return scores;
-}
-
-async function isDir(path: string) {
-  return new Promise<boolean>(async (resolve) => {
-    const stat = statSync(path);
-    resolve(stat.isDirectory());
-  });
 }

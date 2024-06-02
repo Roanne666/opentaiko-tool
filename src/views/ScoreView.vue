@@ -58,8 +58,8 @@
 import { h, ref, watch } from "vue";
 import { NButton, NDataTable, NIcon, type DataTableColumn, type DataTableColumnGroup, NCheckboxGroup, NSpace, NCheckbox, NRadioGroup, NRadio, NFlex } from "naive-ui";
 import { currentSongUrl, genre, getSongUrl, allSongs, showSongs, type ScoreTypes, levels, scores, type DifficultyTypes, type LevelTypes } from "@/stores/song";
-import type { ScoreInfo, Song } from "@server/song";
-import { PlayCircleOutline as PlayIcon, PauseCircleOutline as PauseIcon } from "@vicons/ionicons5";
+import type { DifficultyInfo, Song } from "@server/song";
+import { PlayCircleOutline as PlayIcon, StopCircleOutline as StopIcon } from "@vicons/ionicons5";
 
 const audioRef = ref<HTMLAudioElement>();
 const currentSong = ref("");
@@ -69,52 +69,61 @@ const difficultySelect = ref<DifficultyTypes>("all");
 const levelSelect = ref<LevelTypes>(0);
 const scoreSelcet = ref<ScoreTypes>("全部");
 
+// 根据选项过滤歌曲
 watch([genreSelect, difficultySelect, levelSelect, scoreSelcet], () => {
-  showSongs.length = 0;
-  showSongs.push(
-    ...allSongs.filter((s) => {
-      let isMatch = false;
+  const filterSongs = allSongs.filter((s) => {
+    let isMatch = false;
 
-      const currentDifficulty = difficultySelect.value;
+    const dValue = difficultySelect.value;
 
-      if (currentDifficulty === "all") {
-        let levelMatch =
-          levelSelect.value === 0 ||
-          s.easy.level === levelSelect.value ||
-          s.normal.level === levelSelect.value ||
-          s.hard.level === levelSelect.value ||
-          s.oni.level === levelSelect.value;
-
-        if (!levelMatch && s.extreme) {
-          levelMatch = s.extreme.level === levelSelect.value;
-        }
-
-        let scoreMatch = scoreSelcet.value === "全部";
-        if (!scoreMatch) {
-          const anyMatch = ["easy", "normal", "hard", "oni", "extreme"].find((d) => {
-            if (d === "easy" || d === "normal" || d === "hard" || d === "oni") {
-              return s[d].score >= scores[scoreSelcet.value][0] && s[d].score < scores[scoreSelcet.value][1];
-            } else if (d === "extreme" && s.extreme) {
-              return (s.extreme as ScoreInfo).score >= scores[scoreSelcet.value][0] && (s.extreme as ScoreInfo).level < scores[scoreSelcet.value][1];
-            }
-            return false;
-          });
-          scoreMatch = anyMatch !== undefined;
-        }
-
-        isMatch = levelMatch && scoreMatch;
-      } else if (s[currentDifficulty]) {
-        const levelMatch = levelSelect.value === 0 || (s[currentDifficulty] as ScoreInfo).level === levelSelect.value;
-        let scoreMatch = scoreSelcet.value === "全部";
-        if (!scoreMatch) {
-          scoreMatch = (s[currentDifficulty] as ScoreInfo).score >= scores[scoreSelcet.value][0] && (s[currentDifficulty] as ScoreInfo).score < scores[scoreSelcet.value][1];
-        }
-        isMatch = levelMatch && scoreMatch;
+    if (dValue === "all") {
+      let levelMatch = levelSelect.value === 0;
+      if (!levelMatch) {
+        const anyMatch = ["easy", "normal", "hard", "oni", "extreme"].find((d) => {
+          if (d === "easy" || d === "normal" || d === "hard" || d === "oni") {
+            return s[d].level === levelSelect.value;
+          } else if (d === "extreme" && s.extreme) {
+            return s.extreme.level === levelSelect.value;
+          }
+          return false;
+        });
+        levelMatch = anyMatch !== undefined;
       }
 
-      return genreSelect.value.includes(s.genre) && isMatch;
-    })
-  );
+      let scoreMatch = scoreSelcet.value === "全部";
+      if (!scoreMatch) {
+        const anyMatch = ["easy", "normal", "hard", "oni", "extreme"].find((d) => {
+          if (d === "easy" || d === "normal" || d === "hard" || d === "oni") {
+            const overMin = s[d].score >= scores[scoreSelcet.value][0];
+            const lowerMax = s[d].score < scores[scoreSelcet.value][1];
+            return overMin && lowerMax;
+          } else if (d === "extreme" && s.extreme) {
+            const overMin = s.extreme.score >= scores[scoreSelcet.value][0];
+            const lowerMax = s.extreme.score < scores[scoreSelcet.value][1];
+            return overMin && lowerMax;
+          }
+          return false;
+        });
+        scoreMatch = anyMatch !== undefined;
+      }
+
+      isMatch = levelMatch && scoreMatch;
+    } else if (s[dValue]) {
+      const levelMatch = levelSelect.value === 0 || (s[dValue] as DifficultyInfo).level === levelSelect.value;
+      let scoreMatch = scoreSelcet.value === "全部";
+      if (!scoreMatch) {
+        const overMin = (s[dValue] as DifficultyInfo).score >= scores[scoreSelcet.value][0];
+        const lowerMax = (s[dValue] as DifficultyInfo).score < scores[scoreSelcet.value][1];
+        scoreMatch = overMin && lowerMax;
+      }
+      isMatch = levelMatch && scoreMatch;
+    }
+
+    return genreSelect.value.includes(s.genre) && isMatch;
+  });
+
+  showSongs.length = 0;
+  showSongs.push(...filterSongs);
 });
 
 const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
@@ -146,13 +155,18 @@ const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
             paddingBottom: "-2px",
           },
           onClick: async () => {
-            currentSong.value = row.name;
-            await getSongUrl(row.dir + "\\" + row.name + ".ogg");
-            audioRef.value?.load();
-            audioRef.value?.play();
+            if (currentSong.value === row.name) {
+              currentSong.value = "";
+              audioRef.value?.pause();
+            } else {
+              currentSong.value = row.name;
+              await getSongUrl(row.dir + "\\" + row.name + ".ogg");
+              audioRef.value?.load();
+              audioRef.value?.play();
+            }
           },
         },
-        () => [h(NIcon, currentSong.value !== row.name ? () => [h(PlayIcon)] : () => [h(PauseIcon)])]
+        () => [h(NIcon, currentSong.value !== row.name ? () => [h(PlayIcon)] : () => [h(StopIcon)])]
       );
     },
   },
