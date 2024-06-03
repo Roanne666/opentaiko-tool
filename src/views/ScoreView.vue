@@ -1,8 +1,6 @@
 <style scoped></style>
 
 <template>
-  <audio ref="audioRef" :src="currentSongUrl" autoplay="true"></audio>
-
   <n-flex vertical>
     <div>
       <n-checkbox-group v-model:value="genreSelect">
@@ -55,19 +53,41 @@
 </template>
 
 <script setup lang="ts">
-import { h, ref, watch } from "vue";
-import { NButton, NDataTable, NIcon, type DataTableColumn, type DataTableColumnGroup, NCheckboxGroup, NSpace, NCheckbox, NRadioGroup, NRadio, NFlex } from "naive-ui";
-import { currentSongUrl, genre, getSongUrl, allSongs, showSongs, type ScoreTypes, levels, scores, type DifficultyTypes, type LevelTypes } from "@/stores/song";
+import { onMounted, ref, watch } from "vue";
+import {
+  NDataTable,
+  type DataTableColumn,
+  type DataTableColumnGroup,
+  NCheckboxGroup,
+  NSpace,
+  NCheckbox,
+  NRadioGroup,
+  NRadio,
+  NFlex,
+} from "naive-ui";
+import {
+  currentSongUrl,
+  genre,
+  allSongs,
+  showSongs,
+  type ScoreTypes,
+  levels,
+  scores,
+  type DifficultyTypes,
+  type LevelTypes,
+} from "@/stores/song";
 import type { DifficultyInfo, Song } from "@server/song";
-import { PlayCircleOutline as PlayIcon, StopCircleOutline as StopIcon } from "@vicons/ionicons5";
-
-const audioRef = ref<HTMLAudioElement>();
-const currentSong = ref("");
 
 const genreSelect = ref(genre);
 const difficultySelect = ref<DifficultyTypes>("all");
 const levelSelect = ref<LevelTypes>(0);
 const scoreSelcet = ref<ScoreTypes>("全部");
+
+onMounted(() => {
+  currentSongUrl.value = "";
+  showSongs.length = 0;
+  showSongs.push(...allSongs);
+});
 
 // 根据选项过滤歌曲
 watch([genreSelect, difficultySelect, levelSelect, scoreSelcet], () => {
@@ -138,37 +158,6 @@ const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
     key: "genre",
     align: "center",
     width: 150,
-  },
-  {
-    title: "播放",
-    key: "play",
-    align: "center",
-    width: 100,
-    render(row, rowIndex) {
-      return h(
-        NButton,
-        {
-          text: true,
-          style: {
-            fontSize: "24px",
-            paddingTop: "2px",
-            paddingBottom: "-2px",
-          },
-          onClick: async () => {
-            if (currentSong.value === row.name) {
-              currentSong.value = "";
-              audioRef.value?.pause();
-            } else {
-              currentSong.value = row.name;
-              await getSongUrl(row.dir + "\\" + row.name + ".ogg");
-              audioRef.value?.load();
-              audioRef.value?.play();
-            }
-          },
-        },
-        () => [h(NIcon, currentSong.value !== row.name ? () => [h(PlayIcon)] : () => [h(StopIcon)])]
-      );
-    },
   },
   createDiffultyColumn("梅", "easy"),
   createDiffultyColumn("竹", "normal"),

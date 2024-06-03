@@ -25,7 +25,7 @@ app.get("/api/stopCloseServer", (req: Request, res: Response, next: NextFunction
 });
 
 app.get("/api/songs", async (req: Request, res: Response, next: NextFunction) => {
-  const songs: Song[] = await loadSongs("D:\\Game\\OpenTaiko-v0.5.3.1\\Songs");
+  const songs: Song[] = await loadSongs();
   res.send(songs);
 });
 
