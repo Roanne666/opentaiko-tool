@@ -3,7 +3,7 @@ export type BeatmapPart = {
   scroll: number;
   measure: [number, number];
   gogoTime: boolean;
-  notes: number[][];
+  notesArray: number[][];
   barline: boolean;
 };
 
@@ -36,7 +36,7 @@ function parseBeatmapPart(lines: string[], start: number, barline: boolean): { e
     measure: [4, 4],
     gogoTime: false,
     barline,
-    notes: [],
+    notesArray: [],
   };
   for (let i = start; i < lines.length - 1; i++) {
     const line = lines[i].toLowerCase().trim();
@@ -44,7 +44,7 @@ function parseBeatmapPart(lines: string[], start: number, barline: boolean): { e
     if (partStart) {
       if (line.includes("#")) return { end: i - 1, beatmapPart };
       else if (line.includes(",")) {
-        beatmapPart.notes.push(
+        beatmapPart.notesArray.push(
           line
             .split(",")[0]
             .split("")
@@ -62,7 +62,7 @@ function parseBeatmapPart(lines: string[], start: number, barline: boolean): { e
       else if (line.includes("#barlineon")) beatmapPart.barline = true;
       else if (line.includes(",")) {
         partStart = true;
-        beatmapPart.notes.push(
+        beatmapPart.notesArray.push(
           line
             .split(",")[0]
             .split("")

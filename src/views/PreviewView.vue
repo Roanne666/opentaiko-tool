@@ -41,7 +41,7 @@
       :single-line="false"
     ></n-data-table>
   </n-flex>
-  <canvas ref="canvasRef"></canvas>
+  <canvas ref="canvasRef" width="1060" height="1200"</canvas>
 </template>
 
 <script setup lang="ts">
@@ -86,9 +86,6 @@ onMounted(() => {
   currentSongUrl.value = "";
   showSongs.length = 0;
   showSongs.push(...allSongs);
-
-  const context = canvasRef.value?.getContext("2d") as CanvasRenderingContext2D;
-  createBeatmapImage(context);
 });
 
 onMounted(() => {});
@@ -204,7 +201,9 @@ function createDiffultyColumn(title: string, key: string): DataTableColumnGroup<
               return h(
                 NButton,
                 {
-                  onClick() {},
+                  onClick() {
+                    createBeatmapImage(canvasRef.value as HTMLCanvasElement, row.bpm, row[key] as DifficultyInfo);
+                  },
                 },
                 () => "预览"
               );
