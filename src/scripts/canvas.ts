@@ -1,14 +1,18 @@
-import type { DifficultyInfo } from "@server/song";
+import type { DifficultyInfo, Song } from "@server/song";
 
 type Vector2 = {
   x: number;
   y: number;
 };
 
-export function createBeatmapImage(canvas: HTMLCanvasElement, bpm: number, info: DifficultyInfo) {
+export function createBeatmapImage(
+  canvas: HTMLCanvasElement,
+  song: Song,
+  difficulty: "easy" | "normal" | "hard" | "oni" | "extreme"
+) {
   const context = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-  const startPos: Vector2 = { x: 50, y: 50 };
+  const startPos: Vector2 = { x: 50, y: 90 };
 
   const partSize: Vector2 = { x: 240, y: 35 };
 
@@ -17,16 +21,18 @@ export function createBeatmapImage(canvas: HTMLCanvasElement, bpm: number, info:
   let measurePartCount = -1;
   let currentRow = -1;
 
-  const beatmapColumns = Math.ceil(info.beatmap.reduce((pn, beatmapPart) => pn + beatmapPart.notesArray.length, 0) / 4);
+  const difficultyInfo = song[difficulty] as DifficultyInfo;
 
-  canvas.height = startPos.y + beatmapColumns * (partSize.y + partSpace) - partSpace + 50;
-  context.save();
-  context.fillStyle = "rgb(204,204,204)";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  context.restore();
+  const beatmapColumns = Math.ceil(
+    difficultyInfo.beatmap.reduce((pn, beatmapPart) => pn + beatmapPart.notesArray.length, 0) / 4
+  );
 
-  for (let i = 0; i < info.beatmap.length; i++) {
-    const part = info.beatmap[i];
+  canvas.height = startPos.y + beatmapColumns * (partSize.y + partSpace) - partSpace + 25;
+  drawImageBackground(canvas, song, difficulty);
+
+  for (let i = 0; i < difficultyInfo.beatmap.length; i++) {
+    const part = difficultyInfo.beatmap[i];
+    let showBpmChange = false;
 
     for (let j = 0; j < part.notesArray.length; j++) {
       const notes = part.notesArray[j];
@@ -36,9 +42,17 @@ export function createBeatmapImage(canvas: HTMLCanvasElement, bpm: number, info:
 
       if (grid.y > currentRow) {
         currentRow += 1;
-        drawBackground(context, startPos.y, currentRow, partSize.y, canvas.width, partSpace);
+        drawLineBackground(context, startPos.y, currentRow, partSize.y, canvas.width, partSpace);
       }
-      drawLine(context, startPos, partSize, grid, partSpace);
+
+      if (measurePartCount === 0) {
+        drawLine(context, startPos, partSize, grid, partSpace, song.bpm);
+      } else if (!showBpmChange && part.bpmChange) {
+        showBpmChange = true;
+        drawLine(context, startPos, partSize, grid, partSpace, part.bpmChange);
+      } else {
+        drawLine(context, startPos, partSize, grid, partSpace);
+      }
 
       for (let k = 0; k < notes.length; k++) {
         const notePos: Vector2 = {
@@ -65,7 +79,48 @@ export function createBeatmapImage(canvas: HTMLCanvasElement, bpm: number, info:
   }
 }
 
-function drawBackground(
+function drawImageBackground(
+  canvas: HTMLCanvasElement,
+  song: Song,
+  difficulty: "easy" | "normal" | "hard" | "oni" | "extreme"
+) {
+  const fontfamily = ' "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif';
+  const difficultyNames = {
+    easy: "梅",
+    normal: "竹",
+    hard: "松",
+    oni: "鬼",
+    extreme: "里",
+  };
+
+  const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+
+  context.save();
+  // 图片底色
+  context.fillStyle = "rgb(204,204,204)";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  // 歌名
+  context.fillStyle = "black";
+  context.font = "normal bold 20px" + fontfamily;
+  context.fillText(song.name, 10, 30);
+
+  // 难度
+  context.font = "normal bold 18px" + fontfamily;
+  context.fillText(difficultyNames[difficulty], 10, 55);
+
+  // 星级
+  context.font = `normal bold 24px` + fontfamily;
+  let levelText = "";
+  for (let i = 0; i < 10; i++) {
+    levelText += i < (song[difficulty] as DifficultyInfo).level ? "★" : "☆";
+  }
+  context.fillText(levelText, 35, 57);
+
+  context.restore();
+}
+
+function drawLineBackground(
   context: CanvasRenderingContext2D,
   startY: number,
   row: number,
@@ -94,7 +149,8 @@ function drawLine(
   startPos: Vector2,
   partSize: Vector2,
   gridInfo: Vector2,
-  space: number
+  space: number,
+  bpm?: number
 ) {
   const beginPos: Vector2 = {
     x: startPos.x + partSize.x * gridInfo.x,
@@ -112,6 +168,12 @@ function drawLine(
   context.fillStyle = "black";
   context.fillText(`${gridInfo.y * 4 + gridInfo.x + 1}`, beginPos.x + 5, beginPos.y + 10);
 
+  // bpm标注
+  if (bpm) {
+    context.fillText(`bpm${bpm}`, beginPos.x + 20, beginPos.y + 10);
+  }
+
+  // 节拍竖线
   context.lineWidth = 2;
   context.strokeStyle = "white";
   context.beginPath();
@@ -121,6 +183,7 @@ function drawLine(
   context.closePath();
   context.restore();
 
+  // 细分竖线
   for (let i = 1; i < 8; i++) {
     context.save();
     if (i % 2 === 0) {

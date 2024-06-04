@@ -12,7 +12,7 @@ export function parseBeatmap(lines: string[], start: number) {
   let end = start;
   let barline = true;
 
-  for (let i = start; i < lines.length - 1; i++) {
+  for (let i = start; i < lines.length; i++) {
     const line = lines[i].toLowerCase().trim();
     if (line.includes("#end")) break;
 
@@ -32,7 +32,6 @@ function parseBeatmapPart(lines: string[], start: number, barline: boolean): { e
 
   const beatmapPart: BeatmapPart = {
     scroll: 1,
-    bpmChange: 0,
     measure: [4, 4],
     gogoTime: false,
     barline,

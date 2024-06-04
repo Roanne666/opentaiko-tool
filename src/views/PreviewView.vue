@@ -40,8 +40,10 @@
       }"
       :single-line="false"
     ></n-data-table>
+    <div style="margin: auto">
+      <canvas ref="canvasRef" width="1060" height="1200" style=""></canvas>
+    </div>
   </n-flex>
-  <canvas ref="canvasRef" width="1060" height="1200"</canvas>
 </template>
 
 <script setup lang="ts">
@@ -202,7 +204,7 @@ function createDiffultyColumn(title: string, key: string): DataTableColumnGroup<
                 NButton,
                 {
                   onClick() {
-                    createBeatmapImage(canvasRef.value as HTMLCanvasElement, row.bpm, row[key] as DifficultyInfo);
+                    createBeatmapImage(canvasRef.value as HTMLCanvasElement, row, key);
                   },
                 },
                 () => "预览"

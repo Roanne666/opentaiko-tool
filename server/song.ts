@@ -117,18 +117,14 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
    */
   let dInfo: DifficultyInfo = song.oni;
 
-  for (let i = 0; i < lines.length - 1; i++) {
+  for (let i = 0; i < lines.length; i++) {
     const line = lines[i].toLowerCase().trim();
 
-    if (line.includes("bpm")) {
-      song.bpm = Number(line.split(":")[1]);
-    }
+    if (line.includes("bpm:")) song.bpm = Number(line.split(":")[1]);
 
-    if (line.includes("offset")) {
-      song.offset = Number(line.split(":")[1]);
-    }
+    if (line.includes("offset:")) song.offset = Number(line.split(":")[1]);
 
-    if (line.includes("course")) {
+    if (line.includes("course:")) {
       const d = line.split(":")[1];
       if (d === "edit" || d === "extreme" || d === "4") {
         song.extreme = { level: 0, score: 0, scoreInit: 0, scoreDiff: 0, balloon: [], beatmap: [] };
@@ -144,15 +140,15 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
       }
     }
 
-    if (line.includes("level")) dInfo.level = Number(line.split(":")[1]);
-    if (line.includes("balloon")) {
+    if (line.includes("level:")) dInfo.level = Number(line.split(":")[1]);
+    if (line.includes("balloon:")) {
       dInfo.balloon = line
         .split(":")[1]
         .split(",")
         .map((s) => Number(s));
     }
-    if (line.includes("scoreinit")) dInfo.scoreInit = Number(line.split(":")[1]);
-    if (line.includes("scorediff")) dInfo.scoreDiff = Number(line.split(":")[1]);
+    if (line.includes("scoreinit:")) dInfo.scoreInit = Number(line.split(":")[1]);
+    if (line.includes("scorediff:")) dInfo.scoreDiff = Number(line.split(":")[1]);
 
     if (line.includes("#start")) {
       const { end, beatmap } = parseBeatmap(lines, i);
