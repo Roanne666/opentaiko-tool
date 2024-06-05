@@ -162,7 +162,7 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
     if (line.includes("scorediff:")) dInfo.scoreDiff = Number(line.split(":")[1]);
 
     if (line.includes("#start")) {
-      const { end, beatmap } = parseBeatmap(lines, i);
+      const { end, beatmap } = parseBeatmap(lines, i, song.bpm);
       dInfo.beatmap = beatmap;
       i = end;
     }

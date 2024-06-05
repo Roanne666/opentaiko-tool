@@ -1,5 +1,5 @@
 export type BeatmapPart = {
-  bpmChange?: number;
+  bpm: number;
   scroll: number;
   measure: [number, number];
   gogoTime: boolean;
@@ -7,7 +7,7 @@ export type BeatmapPart = {
   barline: boolean;
 };
 
-export function parseBeatmap(lines: string[], start: number) {
+export function parseBeatmap(lines: string[], start: number, bpm: number) {
   const beatmap: BeatmapPart[] = [];
   let end = start;
   let barline = true;
@@ -17,7 +17,7 @@ export function parseBeatmap(lines: string[], start: number) {
     if (line.includes("#end")) break;
 
     if (line.includes("#")) {
-      const { end, beatmapPart } = parseBeatmapPart(lines, i, barline);
+      const { end, beatmapPart } = parseBeatmapPart(lines, i, barline, bpm);
       beatmap.push(beatmapPart);
       barline = beatmapPart.barline;
       i = end;
@@ -27,13 +27,19 @@ export function parseBeatmap(lines: string[], start: number) {
   return { end, beatmap };
 }
 
-function parseBeatmapPart(lines: string[], start: number, barline: boolean): { end: number; beatmapPart: BeatmapPart } {
+function parseBeatmapPart(
+  lines: string[],
+  start: number,
+  barline: boolean,
+  bpm: number
+): { end: number; beatmapPart: BeatmapPart } {
   let partStart = false;
 
   const beatmapPart: BeatmapPart = {
-    scroll: 0,
+    scroll: 1,
     measure: [4, 4],
     gogoTime: false,
+    bpm,
     barline,
     notesArray: [],
   };
@@ -52,7 +58,7 @@ function parseBeatmapPart(lines: string[], start: number, barline: boolean): { e
       }
     } else {
       if (line.includes("#scroll")) beatmapPart.scroll = Number(line.split(" ")[1]);
-      else if (line.includes("#bpmchange")) beatmapPart.bpmChange = Number(line.split(" ")[1]);
+      else if (line.includes("#bpmchange")) beatmapPart.bpm = Number(line.split(" ")[1]);
       else if (line.includes("#measure")) {
         const measureStrings = line.split(" ")[1].split("/");
         beatmapPart.measure = [Number(measureStrings[0]), Number(measureStrings[1])];

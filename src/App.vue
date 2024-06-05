@@ -27,14 +27,6 @@ import { fetchAllSongs } from "@/stores/song";
 
 fetchAllSongs();
 
-window.addEventListener("beforeunload", async (event) => {
-  await fetch("/api/closeServer");
-});
-
-window.addEventListener("load", async (event) => {
-  await fetch("/api/stopCloseServer");
-});
-
 function renderIcon(icon: Component) {
   return () => h(NIcon, null, { default: () => h(icon) });
 }

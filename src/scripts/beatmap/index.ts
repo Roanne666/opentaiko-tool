@@ -1,28 +1,11 @@
 import type { DifficlutyType, Song } from "@server/song";
-import {
-  BigNoteSize,
-  beatmapBackgroundColor,
-  difficultyFont,
-  donColor,
-  drakLineColor,
-  kaColor,
-  levelFont,
-  lightLineColor,
-  markFont,
-  partBackgroundColor,
-  partRowSpace,
-  partSize,
-  smallNoteSize,
-  songNameFont,
-  startPos,
-  yellowColor,
-  type Vector2,
-} from "./const";
+import { donColor, kaColor, partRowSpace, partSize, startPos, type Vector2 } from "./const";
 import { drawLong } from "./drawLong";
 import { drawNote } from "./drawNote";
 import { drawLine } from "./drawLine";
 import { drawPartBackground } from "./drawPartBackground";
 import { drawBeatmapBackground } from "./drawBeatmapBackground";
+import { drawMark } from "./drawMark";
 
 export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty: DifficlutyType) {
   const context = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -40,6 +23,9 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
   let measurePartCount = -1;
   let currentRow = -1;
 
+  let currentBpm = song.bpm;
+  let currentScroll = 1;
+
   // 当前气球索引
   let currentBalloonCount = 0;
 
@@ -48,12 +34,10 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
 
   for (let i = 0; i < difficultyInfo.beatmap.length; i++) {
     const part = difficultyInfo.beatmap[i];
-    let showBpmChange = false;
-    let showScroll = false;
 
     for (let j = 0; j < part.notesArray.length; j++) {
       const notes = part.notesArray[j];
-      const interval = partSize.x / notes.length;
+      const interval = Math.ceil(partSize.x / notes.length);
       measurePartCount += 1;
       const grid: Vector2 = { x: measurePartCount % 4, y: Math.floor(measurePartCount / 4) };
 
@@ -62,20 +46,25 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
         drawPartBackground(context, startPos.y, currentRow, partSize.y, canvas.width, partRowSpace);
       }
 
-      let bpm = 0;
-      let scroll = 0;
-
-      if (measurePartCount === 0) bpm = song.bpm;
-
-      if (!showBpmChange && part.bpmChange) {
-        showBpmChange = true;
-        bpm = part.bpmChange;
+      drawLine(context, grid);
+      if (measurePartCount === 0) {
+        if (currentScroll === part.scroll) {
+          drawMark(context, grid, { bpm: part.bpm });
+        } else {
+          drawMark(context, grid, { bpm: part.bpm, scroll: part.scroll });
+        }
+      } else {
+        if (currentBpm !== part.bpm && currentScroll !== part.scroll) {
+          drawMark(context, grid, { bpm: part.bpm, scroll: part.scroll });
+        } else if (currentBpm !== part.bpm) {
+          drawMark(context, grid, { bpm: part.bpm });
+        } else if (currentScroll !== part.scroll) {
+          drawMark(context, grid, { scroll: part.scroll });
+        }
       }
-      if (!showScroll && part.scroll !== 0) {
-        showScroll = true;
-        scroll = part.scroll;
-      }
-      drawLine(context, startPos, partSize, grid, partRowSpace, bpm, scroll);
+
+      currentBpm = part.bpm;
+      currentScroll = part.scroll;
 
       // tja当前行没有写notes时（特殊情况）
       if (notes.length === 0 && currentLong !== "") {

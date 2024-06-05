@@ -9,21 +9,6 @@ const app = express();
 
 app.use(express.static("dist"));
 
-let isClose = false;
-
-app.get("/api/closeServer", (req: Request, res: Response, next: NextFunction) => {
-  isClose = true;
-  res.send(true);
-  setTimeout(() => {
-    if (isClose) process.exit();
-  }, 10000);
-});
-
-app.get("/api/stopCloseServer", (req: Request, res: Response, next: NextFunction) => {
-  isClose = false;
-  res.send(true);
-});
-
 app.get("/api/songs", async (req: Request, res: Response, next: NextFunction) => {
   const songs: Song[] = await loadSongs();
   res.send(songs);
