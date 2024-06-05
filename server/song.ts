@@ -1,9 +1,12 @@
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
-import { BeatmapPart, parseBeatmap } from "./beatmap";
+import { type BeatmapPart, parseBeatmap } from "./beatmap";
 import { isDir } from "./utils";
 
+export type DifficlutyType = "easy" | "normal" | "hard" | "oni" | "extreme";
+
 export type DifficultyInfo = {
+  name: DifficlutyType;
   level: number;
   score: number;
   scoreInit: number;
@@ -19,11 +22,7 @@ export type Song = {
   offset: number;
   dir: string;
   genre: string;
-  easy: DifficultyInfo;
-  normal: DifficultyInfo;
-  hard: DifficultyInfo;
-  oni: DifficultyInfo;
-  extreme?: DifficultyInfo;
+  difficulties: DifficultyInfo[];
 };
 
 const defaultExclude = ["S1 Dan-i Dojo", "S2 Taiko Towers", "X1 Favorite", "X2 Recent", "X3 Search By Difficulty"];
@@ -75,12 +74,9 @@ async function parseSongs(path: string, exclude: string[], use1P = true) {
             : join(songDirPath, songName + ".tja2P.score.ini");
           const scores = parseScores(scorePath);
 
-          for (const d in scores) {
-            if (d === "easy" || d === "normal" || d === "hard" || d === "oni") {
-              song[d].score = scores[d];
-            } else if (d === "extreme" && song.extreme) {
-              song.extreme.score = scores.extreme;
-            }
+          for (const key in scores) {
+            const d = song.difficulties.find((d) => d.name === key);
+            if (d) d.score = scores[key as DifficlutyType];
           }
         }
       }
@@ -103,19 +99,22 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
     bpm: 0,
     offset: 0,
     wave: join(dir, songName + ".ogg"),
-    easy: { level: 0, score: 0, scoreInit: 0, scoreDiff: 0, balloon: [], beatmap: [] },
-    normal: { level: 0, score: 0, scoreInit: 0, scoreDiff: 0, balloon: [], beatmap: [] },
-    hard: { level: 0, score: 0, scoreInit: 0, scoreDiff: 0, balloon: [], beatmap: [] },
-    oni: { level: 0, score: 0, scoreInit: 0, scoreDiff: 0, balloon: [], beatmap: [] },
+    difficulties: [],
   };
 
   const content = readFileSync(filePath).toString();
   const lines = content.split("\n");
 
-  /**
-   * 当前难度信息（默认魔王）
-   */
-  let dInfo: DifficultyInfo = song.oni;
+  // 当前难度信息
+  let dInfo: DifficultyInfo = {
+    name: "easy",
+    level: 0,
+    score: 0,
+    scoreInit: 0,
+    scoreDiff: 0,
+    balloon: [],
+    beatmap: [],
+  };
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].toLowerCase().trim();
@@ -127,16 +126,28 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
     if (line.includes("course:")) {
       const d = line.split(":")[1];
       if (d === "edit" || d === "extreme" || d === "4") {
-        song.extreme = { level: 0, score: 0, scoreInit: 0, scoreDiff: 0, balloon: [], beatmap: [] };
-        dInfo = song.extreme;
+        dInfo = {
+          name: "extreme",
+          level: 0,
+          score: 0,
+          scoreInit: 0,
+          scoreDiff: 0,
+          balloon: [],
+          beatmap: [],
+        };
+        song.difficulties.push(dInfo);
       } else if (d === "oni" || d === "3") {
-        dInfo = song.oni;
+        dInfo = createNewDifficultyInfo("oni");
+        song.difficulties.push(dInfo);
       } else if (d === "hard" || d === "2") {
-        dInfo = song.hard;
+        dInfo = createNewDifficultyInfo("hard");
+        song.difficulties.push(dInfo);
       } else if (d === "normal" || d === "1") {
-        dInfo = song.normal;
+        dInfo = createNewDifficultyInfo("normal");
+        song.difficulties.push(dInfo);
       } else if (d === "easy" || d === "0") {
-        dInfo = song.easy;
+        dInfo = createNewDifficultyInfo("easy");
+        song.difficulties.push(dInfo);
       }
     }
 
@@ -158,6 +169,18 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
   }
 
   return song;
+}
+
+function createNewDifficultyInfo(difficulty: "easy" | "normal" | "hard" | "oni" | "extreme"): DifficultyInfo {
+  return {
+    name: difficulty,
+    level: 0,
+    score: 0,
+    scoreInit: 0,
+    scoreDiff: 0,
+    balloon: [],
+    beatmap: [],
+  };
 }
 
 function parseScores(path: string) {

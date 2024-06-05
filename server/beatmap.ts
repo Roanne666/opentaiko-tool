@@ -31,7 +31,7 @@ function parseBeatmapPart(lines: string[], start: number, barline: boolean): { e
   let partStart = false;
 
   const beatmapPart: BeatmapPart = {
-    scroll: 1,
+    scroll: 0,
     measure: [4, 4],
     gogoTime: false,
     barline,

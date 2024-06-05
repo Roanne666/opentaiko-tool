@@ -1,8 +1,8 @@
-import type { Song } from "@server/song";
+import type { DifficlutyType, Song } from "@server/song";
 import { reactive, ref } from "vue";
 
 // ------- 常量 -------
-export type DifficultyTypes = "all" | "easy" | "normal" | "hard" | "oni" | "extreme";
+export type DifficultyTypes = "all" | DifficlutyType;
 
 /**
  * 等级列表
@@ -63,7 +63,7 @@ export async function fetchAllSongs() {
   });
 
   const newSongs = await res.json();
-  console.log(newSongs)
+  console.log(newSongs);
 
   allSongs.length = 0;
   allSongs.push(...newSongs);

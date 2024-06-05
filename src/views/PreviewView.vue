@@ -71,9 +71,9 @@ import {
   type DifficultyTypes,
   type LevelTypes,
 } from "@/stores/song";
-import type { DifficultyInfo, Song } from "@server/song";
+import type { DifficlutyType, Song } from "@server/song";
 import { PlayCircleOutline as PlayIcon, StopCircleOutline as StopIcon } from "@vicons/ionicons5";
-import { createBeatmapImage } from "@/scripts/canvas";
+import { createBeatmap } from "@/scripts/beatmap";
 
 const canvasRef = ref<HTMLCanvasElement>();
 
@@ -102,18 +102,11 @@ watch([genreSelect, difficultySelect, levelSelect], () => {
     if (dValue === "all") {
       isMatch = levelSelect.value === 0;
       if (!isMatch) {
-        const anyMatch = ["easy", "normal", "hard", "oni", "extreme"].find((d) => {
-          if (d === "easy" || d === "normal" || d === "hard" || d === "oni") {
-            return s[d].level === levelSelect.value;
-          } else if (d === "extreme" && s.extreme) {
-            return s.extreme.level === levelSelect.value;
-          }
-          return false;
-        });
-        isMatch = anyMatch !== undefined;
+        isMatch = s.difficulties.find((d) => d.level === levelSelect.value) ? true : false;
       }
-    } else if (s[dValue]) {
-      isMatch = levelSelect.value === 0 || (s[dValue] as DifficultyInfo).level === levelSelect.value;
+    } else {
+      const d = s.difficulties.find((d) => d.name === dValue);
+      if (d) isMatch = levelSelect.value === 0 || d.level === levelSelect.value;
     }
 
     return genreSelect.value.includes(s.genre) && isMatch;
@@ -186,10 +179,8 @@ function createDiffultyColumn(title: string, key: string): DataTableColumnGroup<
         align: "center",
         width: 80,
         render(row, rowIndex) {
-          if (key === "easy" || key === "normal" || key === "hard" || key === "oni" || key === "extreme") {
-            return row[key] ? `${row[key]?.level}★` : "";
-          }
-          return "";
+          const d = row.difficulties.find((d) => d.name === key);
+          return d ? `${d.level}★` : "";
         },
       },
       {
@@ -198,18 +189,17 @@ function createDiffultyColumn(title: string, key: string): DataTableColumnGroup<
         align: "center",
         width: 110,
         render(row, rowIndex) {
-          if (key === "easy" || key === "normal" || key === "hard" || key === "oni" || key === "extreme") {
-            if (row[key] && row[key]?.level !== 0) {
-              return h(
-                NButton,
-                {
-                  onClick() {
-                    createBeatmapImage(canvasRef.value as HTMLCanvasElement, row, key);
-                  },
+          const d = row.difficulties.find((d) => d.name === key);
+          if (d && d.level !== 0) {
+            return h(
+              NButton,
+              {
+                onClick() {
+                  createBeatmap(canvasRef.value as HTMLCanvasElement, row, key as DifficlutyType);
                 },
-                () => "预览"
-              );
-            }
+              },
+              () => "预览"
+            );
           }
           return "";
         },

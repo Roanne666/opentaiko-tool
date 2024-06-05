@@ -73,10 +73,10 @@ import {
   type ScoreTypes,
   levels,
   scores,
-  type DifficultyTypes,
   type LevelTypes,
+  type DifficultyTypes,
 } from "@/stores/song";
-import type { DifficultyInfo, Song } from "@server/song";
+import type { DifficlutyType, DifficultyInfo, Song } from "@server/song";
 
 const genreSelect = ref(genre);
 const difficultySelect = ref<DifficultyTypes>("all");
@@ -99,44 +99,31 @@ watch([genreSelect, difficultySelect, levelSelect, scoreSelcet], () => {
     if (dValue === "all") {
       let levelMatch = levelSelect.value === 0;
       if (!levelMatch) {
-        const anyMatch = ["easy", "normal", "hard", "oni", "extreme"].find((d) => {
-          if (d === "easy" || d === "normal" || d === "hard" || d === "oni") {
-            return s[d].level === levelSelect.value;
-          } else if (d === "extreme" && s.extreme) {
-            return s.extreme.level === levelSelect.value;
-          }
-          return false;
-        });
-        levelMatch = anyMatch !== undefined;
+        levelMatch = s.difficulties.find((d) => d.level === levelSelect.value) ? true : false;
       }
 
       let scoreMatch = scoreSelcet.value === "全部";
       if (!scoreMatch) {
-        const anyMatch = ["easy", "normal", "hard", "oni", "extreme"].find((d) => {
-          if (d === "easy" || d === "normal" || d === "hard" || d === "oni") {
-            const overMin = s[d].score >= scores[scoreSelcet.value][0];
-            const lowerMax = s[d].score < scores[scoreSelcet.value][1];
-            return overMin && lowerMax;
-          } else if (d === "extreme" && s.extreme) {
-            const overMin = s.extreme.score >= scores[scoreSelcet.value][0];
-            const lowerMax = s.extreme.score < scores[scoreSelcet.value][1];
-            return overMin && lowerMax;
-          }
-          return false;
-        });
-        scoreMatch = anyMatch !== undefined;
+        scoreMatch = s.difficulties.find(
+          (d) => d.score >= scores[scoreSelcet.value][0] && d.score < scores[scoreSelcet.value][1]
+        )
+          ? true
+          : false;
       }
 
       isMatch = levelMatch && scoreMatch;
-    } else if (s[dValue]) {
-      const levelMatch = levelSelect.value === 0 || (s[dValue] as DifficultyInfo).level === levelSelect.value;
-      let scoreMatch = scoreSelcet.value === "全部";
-      if (!scoreMatch) {
-        const overMin = (s[dValue] as DifficultyInfo).score >= scores[scoreSelcet.value][0];
-        const lowerMax = (s[dValue] as DifficultyInfo).score < scores[scoreSelcet.value][1];
-        scoreMatch = overMin && lowerMax;
+    } else {
+      const d = s.difficulties.find((d) => d.name === dValue);
+      if (d) {
+        const levelMatch = levelSelect.value === 0 || d.level === levelSelect.value;
+        let scoreMatch = scoreSelcet.value === "全部";
+        if (!scoreMatch) {
+          const overMin = d.score >= scores[scoreSelcet.value][0];
+          const lowerMax = d.score < scores[scoreSelcet.value][1];
+          scoreMatch = overMin && lowerMax;
+        }
+        isMatch = levelMatch && scoreMatch;
       }
-      isMatch = levelMatch && scoreMatch;
     }
 
     return genreSelect.value.includes(s.genre) && isMatch;
@@ -166,7 +153,7 @@ const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
   createDiffultyColumn("里", "extreme"),
 ];
 
-function createDiffultyColumn(title: string, key: string): DataTableColumnGroup<Song> {
+function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColumnGroup<Song> {
   return {
     title,
     key,
@@ -178,10 +165,8 @@ function createDiffultyColumn(title: string, key: string): DataTableColumnGroup<
         align: "center",
         width: 80,
         render(row, rowIndex) {
-          if (key === "easy" || key === "normal" || key === "hard" || key === "oni" || key === "extreme") {
-            return row[key] ? `${row[key]?.level}★` : "";
-          }
-          return "";
+          const d = row.difficulties.find((d) => d.name === key);
+          return d ? `${d.level}★` : "";
         },
       },
       {
@@ -190,15 +175,13 @@ function createDiffultyColumn(title: string, key: string): DataTableColumnGroup<
         align: "center",
         width: 110,
         render(row, rowIndex) {
-          if (key === "easy" || key === "normal" || key === "hard" || key === "oni" || key === "extreme") {
-            return row[key] ? row[key]?.score : "";
-          }
-          return "";
+          const d = row.difficulties.find((d) => d.name === key);
+          return d ? d.score : "";
         },
         sorter(rowA, rowB) {
-          if (key === "easy" || key === "normal" || key === "hard" || key === "oni" || key === "extreme") {
-            return (rowA[key]?.score || 0) - (rowB[key]?.score || 0);
-          }
+          const dA = rowA.difficulties.find((d) => d.name === key);
+          const dB = rowB.difficulties.find((d) => d.name === key);
+          if (dA && dB) return dA.score - dB.score;
           return 0;
         },
       },
