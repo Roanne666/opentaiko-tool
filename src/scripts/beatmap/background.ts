@@ -1,11 +1,11 @@
 import type { Song, DifficlutyType } from "@server/song";
-import { beatmapBackgroundColor, songNameFont, difficultyFont, levelFont } from "./const";
+import { beatmapBgColor, songNameFont, difficultyFont, levelFont } from "@/scripts/beatmap/const";
 
 /**
  * 绘制图片背景
- * @param canvas 
- * @param song 
- * @param difficulty 
+ * @param canvas
+ * @param song
+ * @param difficulty
  */
 export function drawBackground(canvas: HTMLCanvasElement, song: Song, difficulty: DifficlutyType) {
   const difficultyNames = {
@@ -21,7 +21,7 @@ export function drawBackground(canvas: HTMLCanvasElement, song: Song, difficulty
   context.save();
 
   // 图片底色
-  context.fillStyle = beatmapBackgroundColor;
+  context.fillStyle = beatmapBgColor;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
   // 歌名

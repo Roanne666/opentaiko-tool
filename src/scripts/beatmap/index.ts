@@ -1,13 +1,27 @@
 import type { DifficlutyType, Song } from "@server/song";
-import { donColor, kaColor, rowHeight, rowSpace, beatWidth, startPos, type Vector2, beatPerRow } from "./const";
-import { getLongActions } from "./drawLong";
-import { drawNote } from "./drawNote";
-import { drawPart as drawBar } from "./drawBar";
-import { drawRow } from "./drawRow";
-import { drawBackground } from "./drawBackground";
-import { getMarkActions } from "./drawMark";
-import { getBeatmapRows } from "./utils";
-import type { DrawAction, DrawNoteAction, DrawTextAction } from "./drawSystem/drawAction";
+import {
+  donColor,
+  kaColor,
+  rowHeight,
+  rowSpace,
+  beatWidth,
+  beatPerRow,
+  markFont,
+  yellowColor,
+  smallNoteSize,
+  bigNoteSize,
+  balloonColor,
+  marginX,
+  marginY,
+} from "@/scripts/beatmap/const";
+import { getLongActions } from "@/scripts/beatmap/long";
+import { getNoteAction } from "@/scripts/beatmap/note";
+import { getBarActions } from "@/scripts/beatmap/bar";
+import { drawRow } from "@/scripts/beatmap/row";
+import { drawBackground } from "@/scripts/beatmap/background";
+import { getMarkActions } from "@/scripts/beatmap/mark";
+import { getBeatmapRows } from "@/scripts/beatmap/utils";
+import { DrawTextAction, type DrawAction } from "@/scripts/beatmap/drawAction";
 
 export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty: DifficlutyType) {
   const context = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -16,8 +30,8 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
 
   // 调整canvas大小并绘制背景
   const beatmapRows = getBeatmapRows(difficultyInfo.beatmap);
-  canvas.width = 2 * startPos.x + beatWidth * beatPerRow;
-  canvas.height = startPos.y + beatmapRows * (rowHeight + rowSpace) - rowSpace + 25;
+  canvas.width = 2 * marginX + beatWidth * beatPerRow;
+  canvas.height = marginY + beatmapRows * (rowHeight + rowSpace) - rowSpace + 25;
   drawBackground(canvas, song, difficulty);
 
   // 初始化数据
@@ -26,8 +40,9 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
   const markActions: DrawAction[] = [];
   const noteActions: DrawAction[] = [];
 
+  let currentBeatCount = 0;
   let barCount = -1;
-  let currentCol = -1;
+  let currentColumn = -1;
   let currentRow = -1;
   let lastBpm = song.bpm;
   let lastScroll = 1;
@@ -47,9 +62,12 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
     const barPerRow = Math.floor(beatPerRow / measure[0]);
     const barWidth = measure[0] * beatWidth;
 
-    // 不是第一小节且节拍变化时
-    if (barCount >= 0 && lastMeasure[0] !== measure[0]) {
-      currentCol = -1;
+    // 不是第一小节且节拍变化时，长条时优先不换行
+    const measureChange = lastMeasure[0] !== measure[0];
+    const beatOverflow = currentBeatCount + measure[0] > 16;
+    if (barCount >= 0 && measureChange && (currentLong === "" || beatOverflow)) {
+      currentColumn = -1;
+      currentBeatCount = 0;
       newRow = true;
     }
 
@@ -59,12 +77,13 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
       const notes = part.notesArray[j];
       const interval = Math.ceil(barWidth / notes.length);
       barCount += 1;
-      currentCol += 1;
+      currentColumn += 1;
 
       // 超过一行小节数时换行
-      if (currentCol % barPerRow === 0) {
-        currentCol = 0;
+      if (currentColumn % barPerRow === 0) {
+        currentColumn = 0;
         currentRow += 1;
+        currentBeatCount = 0;
         newRow = true;
       }
 
@@ -74,24 +93,22 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
         newRow = false;
       }
 
-      const grid: Vector2 = { x: currentCol, y: currentRow };
-
-      drawBar(context, barCount, measure, grid, gogoTime);
+      barActions.push(...getBarActions(barCount, measure, currentBeatCount, currentRow, gogoTime));
 
       // 根据bpm和scroll变化绘制标记
       if (barCount === 0) {
         if (lastScroll === scroll) {
-          markActions.push(...getMarkActions(barWidth, grid, { bpm }));
+          markActions.push(...getMarkActions(currentBeatCount, currentRow, currentColumn, { bpm }));
         } else {
-          markActions.push(...getMarkActions(barWidth, grid, { bpm, scroll }));
+          markActions.push(...getMarkActions(currentBeatCount, currentRow, currentColumn, { bpm, scroll }));
         }
       } else {
         if (lastBpm !== bpm && lastScroll !== scroll) {
-          markActions.push(...getMarkActions(barWidth, grid, { bpm, scroll }));
+          markActions.push(...getMarkActions(currentBeatCount, currentRow, currentColumn, { bpm, scroll }));
         } else if (lastBpm !== bpm) {
-          markActions.push(...getMarkActions(barWidth, grid, { bpm }));
+          markActions.push(...getMarkActions(currentBeatCount, currentRow, currentColumn, { bpm }));
         } else if (lastScroll !== scroll) {
-          markActions.push(...getMarkActions(barWidth, grid, { scroll }));
+          markActions.push(...getMarkActions(currentBeatCount, currentRow, currentColumn, { scroll }));
         }
       }
 
@@ -100,68 +117,94 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
 
       // tja当前行没有写notes时（特殊情况）
       if (notes.length === 0 && currentLong !== "") {
-        const pos: Vector2 = {
-          x: startPos.x + grid.x * barWidth,
-          y: startPos.y + grid.y * (rowHeight + rowSpace) + rowHeight / 2,
-        };
-        if (currentLong === "small") getLongActions(context, pos, "yellow", "middle", barWidth, "small");
-        if (currentLong === "big") getLongActions(context, pos, "yellow", "middle", barWidth, "big");
-        if (currentLong === "balloon") getLongActions(context, pos, "balloon", "middle", barWidth, "small");
+        const x = marginX + currentBeatCount * beatWidth;
+        const y = marginY + currentRow * (rowHeight + rowSpace) + rowHeight / 2;
+
+        let color = currentLong === "balloon" ? balloonColor : yellowColor;
+        let radius = currentLong === "big" ? bigNoteSize : smallNoteSize;
+        const longActions = getLongActions({ x, y, color, radius, drawType: "middle", interval: barWidth });
+        noteActions.push(...longActions);
       }
 
       // 绘制音符
       for (let k = 0; k < notes.length; k++) {
-        const notePos: Vector2 = {
-          x: startPos.x + grid.x * barWidth + k * interval,
-          y: startPos.y + grid.y * (rowHeight + rowSpace) + rowHeight / 2,
-        };
-
         const note = notes[k];
+        const noteX = marginX + currentBeatCount * beatWidth + k * interval;
+        const noteY = marginY + currentRow * (rowHeight + rowSpace) + rowHeight / 2;
 
         if (note === 0) {
-          if (currentLong === "small") getLongActions(context, notePos, "yellow", "middle", interval, "small");
-          if (currentLong === "big") getLongActions(context, notePos, "yellow", "middle", interval, "big");
-          if (currentLong === "balloon") getLongActions(context, notePos, "balloon", "middle", interval, "small");
+          if (currentLong !== "") {
+            let color = currentLong === "balloon" ? balloonColor : yellowColor;
+            let radius = currentLong === "big" ? bigNoteSize : smallNoteSize;
+            const longActions = getLongActions({
+              x: noteX,
+              y: noteY,
+              color,
+              radius,
+              drawType: "middle",
+              interval,
+            });
+            noteActions.push(...longActions);
+          }
         } else if (note === 1) {
-          noteActions.push(drawNote(notePos, donColor, "small", "full"));
+          noteActions.push(getNoteAction(noteX, noteY, donColor, smallNoteSize, "full"));
         } else if (note === 2) {
-          noteActions.push(drawNote(notePos, kaColor, "small", "full"));
+          noteActions.push(getNoteAction(noteX, noteY, kaColor, smallNoteSize, "full"));
         } else if (note === 3) {
-          noteActions.push(drawNote(notePos, donColor, "big", "full"));
+          noteActions.push(getNoteAction(noteX, noteY, donColor, bigNoteSize, "full"));
         } else if (note === 4) {
-          noteActions.push(drawNote(notePos, kaColor, "big", "full"));
+          noteActions.push(getNoteAction(noteX, noteY, kaColor, bigNoteSize, "full"));
         } else if (note === 5) {
           currentLong = "small";
-          noteActions.push(...getLongActions(context, notePos, "yellow", "start", interval, currentLong));
+          const longActions = getLongActions({
+            x: noteX,
+            y: noteY,
+            color: yellowColor,
+            radius: smallNoteSize,
+            drawType: "start",
+            interval,
+          });
+          noteActions.push(...longActions);
         } else if (note === 6) {
           currentLong = "big";
-          noteActions.push(...getLongActions(context, notePos, "yellow", "start", interval, currentLong));
+          const longActions = getLongActions({
+            x: noteX,
+            y: noteY,
+            color: yellowColor,
+            radius: bigNoteSize,
+            drawType: "start",
+            interval,
+          });
+          noteActions.push(...longActions);
         } else if (note === 7) {
           currentLong = "balloon";
-          noteActions.push(
-            ...getLongActions(
-              context,
-              notePos,
-              "balloon",
-              "start",
-              interval,
-              "small",
-              difficultyInfo.balloon[currentBalloonCount]
-            )
-          );
+
+          // 气球数字标记
+          const balloonNum = difficultyInfo.balloon[currentBalloonCount];
+          const textAction = new DrawTextAction({ font: markFont, color: "black", text: `${balloonNum}`, x: noteX - 4, y: noteY + 4 });
+          markActions.push(textAction);
+
+          const longActions = getLongActions({ x: noteX, y: noteY, color: balloonColor, radius: smallNoteSize, drawType: "start", interval });
+          noteActions.push(...longActions);
+
           currentBalloonCount += 1;
         } else if (note === 8) {
-          if (currentLong === "balloon") {
-            noteActions.push(...getLongActions(context, notePos, "balloon", "end", interval, "small"));
-          } else if (currentLong === "small" || currentLong === "big") {
-            noteActions.push(...getLongActions(context, notePos, "yellow", "end", interval, currentLong));
+          if (currentLong !== "") {
+            let color = currentLong === "balloon" ? balloonColor : yellowColor;
+            let radius = currentLong === "big" ? bigNoteSize : smallNoteSize;
+            const longActions = getLongActions({ x: noteX, y: noteY, color, radius, drawType: "end", interval });
+            noteActions.push(...longActions);
           }
           currentLong = "";
         }
       }
+
+      currentBeatCount += measure[0];
     }
   }
 
-  markActions.forEach((a) => a.draw(context));
+  rowActions.forEach((a) => a.draw(context));
+  barActions.forEach((a) => a.draw(context));
   noteActions.forEach((a) => a.draw(context));
+  markActions.forEach((a) => a.draw(context));
 }

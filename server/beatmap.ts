@@ -27,12 +27,7 @@ export function parseBeatmap(lines: string[], start: number, songBpm: number) {
   return { end, beatmap };
 }
 
-function parseBeatmapPart(
-  lines: string[],
-  start: number,
-  songBpm: number,
-  lastBeatmapPart?: BeatmapPart
-): { end: number; beatmapPart: BeatmapPart } {
+function parseBeatmapPart(lines: string[], start: number, songBpm: number, lastBeatmapPart?: BeatmapPart): { end: number; beatmapPart: BeatmapPart } {
   let partStart = false;
 
   const beatmapPart: BeatmapPart = lastBeatmapPart
@@ -64,6 +59,13 @@ function parseBeatmapPart(
             .split("")
             .map((s) => Number(s))
         );
+      } else if (!line.includes(":") && line.length > 0) {
+        beatmapPart.notesArray.push(
+          line
+            .split("//")[0]
+            .split("")
+            .map((s) => Number(s))
+        );
       }
     } else {
       if (line.includes("#scroll")) beatmapPart.scroll = Number(line.split(" ")[1]);
@@ -79,6 +81,14 @@ function parseBeatmapPart(
         beatmapPart.notesArray.push(
           line
             .split(",")[0]
+            .split("")
+            .map((s) => Number(s))
+        );
+      } else if (!line.includes("#") && !line.includes(":") && line.length > 0) {
+        partStart = true;
+        beatmapPart.notesArray.push(
+          line
+            .split("//")[0]
             .split("")
             .map((s) => Number(s))
         );

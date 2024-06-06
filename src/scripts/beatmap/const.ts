@@ -1,14 +1,10 @@
-export type Vector2 = {
-  x: number;
-  y: number;
-};
-
 // ------ 位置/尺寸 ------
 
 /**
- * 绘制起始位置，用于留边
+ * 谱面起始位置，用于留边
  */
-export const startPos: Vector2 = { x: 40, y: 90 };
+export const marginX = 40;
+export const marginY = 90;
 
 /**
  * 每行的拍子数
@@ -70,17 +66,17 @@ export const drakLineColor = "rgb(159,159,159)";
 /**
  * 谱面背景色
  */
-export const beatmapBackgroundColor = "rgb(204,204,204)";
+export const beatmapBgColor = "rgb(204,204,204)";
 
 /**
  * 小节背景色
  */
-export const partBackgroundColor = "rgb(128,128,128)";
+export const partBgColor = "rgb(128,128,128)";
 
 /**
  * gogotime背景色
  */
-export const gogotimeBackgroundColor = "rgb(255,192,192)";
+export const gogotimeBgColor = "rgb(255,192,192)";
 
 // ------ 尺寸 ------
 
@@ -92,7 +88,7 @@ export const smallNoteSize = 8.3;
 /**
  * 大音符的尺寸
  */
-export const BigNoteSize = 11;
+export const bigNoteSize = 11;
 
 // ------ 字体 ------
 export const fontfamily = ' "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif';
