@@ -7,19 +7,19 @@ export type BeatmapPart = {
   barline: boolean;
 };
 
-export function parseBeatmap(lines: string[], start: number, bpm: number) {
+export function parseBeatmap(lines: string[], start: number, songBpm: number) {
   const beatmap: BeatmapPart[] = [];
   let end = start;
-  let barline = true;
+  let lastBeatmapPart: BeatmapPart | undefined = undefined;
 
   for (let i = start; i < lines.length; i++) {
     const line = lines[i].toLowerCase().trim();
     if (line.includes("#end")) break;
 
     if (line.includes("#")) {
-      const { end, beatmapPart } = parseBeatmapPart(lines, i, barline, bpm);
+      const { end, beatmapPart } = parseBeatmapPart(lines, i, songBpm, lastBeatmapPart);
       beatmap.push(beatmapPart);
-      barline = beatmapPart.barline;
+      lastBeatmapPart = beatmapPart;
       i = end;
     }
   }
@@ -30,19 +30,28 @@ export function parseBeatmap(lines: string[], start: number, bpm: number) {
 function parseBeatmapPart(
   lines: string[],
   start: number,
-  barline: boolean,
-  bpm: number
+  songBpm: number,
+  lastBeatmapPart?: BeatmapPart
 ): { end: number; beatmapPart: BeatmapPart } {
   let partStart = false;
 
-  const beatmapPart: BeatmapPart = {
-    scroll: 1,
-    measure: [4, 4],
-    gogoTime: false,
-    bpm,
-    barline,
-    notesArray: [],
-  };
+  const beatmapPart: BeatmapPart = lastBeatmapPart
+    ? {
+        scroll: lastBeatmapPart.scroll,
+        measure: lastBeatmapPart.measure,
+        gogoTime: lastBeatmapPart.gogoTime,
+        bpm: lastBeatmapPart.bpm,
+        barline: lastBeatmapPart.barline,
+        notesArray: [],
+      }
+    : {
+        scroll: 1,
+        measure: [4, 4],
+        gogoTime: false,
+        bpm: songBpm,
+        barline: true,
+        notesArray: [],
+      };
   for (let i = start; i < lines.length - 1; i++) {
     const line = lines[i].toLowerCase().trim();
 

@@ -1,7 +1,13 @@
 import type { Song, DifficlutyType } from "@server/song";
 import { beatmapBackgroundColor, songNameFont, difficultyFont, levelFont } from "./const";
 
-export function drawBeatmapBackground(canvas: HTMLCanvasElement, song: Song, difficulty: DifficlutyType) {
+/**
+ * 绘制图片背景
+ * @param canvas 
+ * @param song 
+ * @param difficulty 
+ */
+export function drawBackground(canvas: HTMLCanvasElement, song: Song, difficulty: DifficlutyType) {
   const difficultyNames = {
     easy: "梅",
     normal: "竹",

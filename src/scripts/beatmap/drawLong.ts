@@ -1,4 +1,5 @@
 import { BigNoteSize, balloonColor, markFont, noteBorder, smallNoteSize, yellowColor, type Vector2 } from "./const";
+import { DrawTextAction, type DrawAction } from "./drawSystem/drawAction";
 import { drawNote } from "./drawNote";
 import { stroke } from "./utils";
 
@@ -12,7 +13,7 @@ import { stroke } from "./utils";
  * @param radiusType 半径类型，区分大小音符
  * @param balloonNum 气球数
  */
-export function drawLong(
+export function getLongActions(
   context: CanvasRenderingContext2D,
   position: Vector2,
   longType: "balloon" | "yellow",
@@ -24,21 +25,30 @@ export function drawLong(
   const size = radiusType === "small" ? smallNoteSize : BigNoteSize;
   const noteColor = longType === "balloon" ? balloonColor : yellowColor;
 
+  const drawActions: DrawAction[] = [];
   if (drawType === "start") {
-    drawNote(context, position, noteColor, radiusType, "left");
+    const noteAction = drawNote(position, noteColor, radiusType, "left");
+    drawActions.push(noteAction);
     fillIntreval(context, position, noteColor, interval, size);
   } else if (drawType === "middle") {
     fillIntreval(context, position, noteColor, interval, size);
   } else {
-    drawNote(context, position, noteColor, radiusType, "right");
+    const noteAction = drawNote(position, noteColor, radiusType, "right");
+    drawActions.push(noteAction);
   }
 
   if (longType === "balloon" && balloonNum) {
-    context.save();
-    context.font = markFont;
-    context.fillText(`${balloonNum}`, position.x - 4, position.y + 4);
-    context.restore();
+    const textAction = new DrawTextAction({
+      font: markFont,
+      fillStyle: "black",
+      text: `${balloonNum}`,
+      x: position.x - 4,
+      y: position.y + 4,
+    });
+    drawActions.push(textAction);
   }
+
+  return drawActions;
 }
 
 // 把长条的中间间隔填满

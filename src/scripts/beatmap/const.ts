@@ -8,17 +8,27 @@ export type Vector2 = {
 /**
  * 绘制起始位置，用于留边
  */
-export const startPos: Vector2 = { x: 50, y: 90 };
+export const startPos: Vector2 = { x: 40, y: 90 };
 
 /**
- * 小节尺寸
+ * 每行的拍子数
  */
-export const partSize: Vector2 = { x: 240, y: 35 };
+export const beatPerRow = 16;
 
 /**
- * 小节每行上下间隔
+ * 拍子宽度
  */
-export const partRowSpace = 45;
+export const beatWidth = 60;
+
+/**
+ * 行高度
+ */
+export const rowHeight = 35;
+
+/**
+ * 行间隔
+ */
+export const rowSpace = 45;
 
 // ------ 颜色 ------
 
@@ -66,6 +76,11 @@ export const beatmapBackgroundColor = "rgb(204,204,204)";
  * 小节背景色
  */
 export const partBackgroundColor = "rgb(128,128,128)";
+
+/**
+ * gogotime背景色
+ */
+export const gogotimeBackgroundColor = "rgb(255,192,192)";
 
 // ------ 尺寸 ------
 

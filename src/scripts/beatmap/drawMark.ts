@@ -1,39 +1,66 @@
-import { markFont, partRowSpace, partSize, startPos, type Vector2 } from "./const";
+import { markFont, rowSpace, rowHeight, startPos, type Vector2 } from "./const";
+import { DrawTextAction } from "./drawSystem/drawAction";
 
-export function drawMark(
-  context: CanvasRenderingContext2D,
+/**
+ * 绘制bpm，scroll等相关标记
+ * @param context
+ * @param gridInfo
+ * @param options
+ */
+export function getMarkActions(
+  barWidth: number,
   gridInfo: Vector2,
   options?: {
     bpm?: number;
     scroll?: number;
   }
 ) {
-  const beginPos: Vector2 = {
-    x: startPos.x + partSize.x * gridInfo.x,
-    y: startPos.y + (partSize.y + partRowSpace) * gridInfo.y - 15,
+  const actions: DrawTextAction[] = [];
+
+  // 和小节数字标记的间隔
+  let margin = 20;
+  if (gridInfo.y * 4 + gridInfo.x + 1 >= 10) margin = 25;
+  if (gridInfo.y * 4 + gridInfo.x + 1 >= 100) margin = 30;
+
+  const firstPos: Vector2 = {
+    x: startPos.x + barWidth * gridInfo.x + margin,
+    y: startPos.y + (rowHeight + rowSpace) * gridInfo.y - 5,
   };
 
-  let interval = 20;
-  if (gridInfo.y * 4 + gridInfo.x + 1 >= 10) interval = 25;
-  if (gridInfo.y * 4 + gridInfo.x + 1 >= 100) interval = 30;
+  const secondPos: Vector2 = {
+    x: startPos.x + barWidth * gridInfo.x + margin + 55,
+    y: startPos.y + (rowHeight + rowSpace) * gridInfo.y - 5,
+  };
 
   let drawBpm = false;
-
-  context.save();
-  context.font = markFont;
-  context.fillStyle = "black";
 
   // bpm标注
   if (options?.bpm) {
     drawBpm = true;
-    context.fillText(`bpm${options.bpm}`, beginPos.x + interval, beginPos.y + 10);
+    actions.push(
+      new DrawTextAction({
+        font: markFont,
+        fillStyle: "black",
+        text: `bpm${options.bpm}`,
+        x: firstPos.x,
+        y: firstPos.y,
+      })
+    );
   }
 
   // scroll标注
   if (options?.scroll) {
-    const beginX = drawBpm ? beginPos.x + 55 + interval : beginPos.x + interval;
-    context.fillText(`scroll ${options.scroll}`, beginX, beginPos.y + 10);
+    const pos = drawBpm ? secondPos : firstPos;
+    actions.push(
+      new DrawTextAction({
+        font: markFont,
+        fillStyle: "black",
+        text: `scroll ${options.scroll}`,
+        x: pos.x,
+        y: pos.y,
+      })
+    );
   }
 
-  context.restore();
+  return actions;
 }
