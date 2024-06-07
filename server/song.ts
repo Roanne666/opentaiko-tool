@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
-import { type BeatmapPart, parseBeatmap } from "./beatmap";
+import { type BeatmapBar, parseBeatmap } from "./beatmap";
 import { isDir } from "./utils";
 
 export type DifficlutyType = "easy" | "normal" | "hard" | "oni" | "extreme";
@@ -12,7 +12,7 @@ export type DifficultyInfo = {
   scoreInit: number;
   scoreDiff: number;
   balloon: number[];
-  beatmap: BeatmapPart[];
+  beatmap: BeatmapBar[];
 };
 
 export type Song = {

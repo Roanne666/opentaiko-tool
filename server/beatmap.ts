@@ -1,99 +1,50 @@
-export type BeatmapPart = {
+export type BeatmapBar = {
   bpm: number;
   scroll: number;
   measure: [number, number];
   gogoTime: boolean;
-  notesArray: number[][];
   barline: boolean;
+  notes: number[];
 };
 
 export function parseBeatmap(lines: string[], start: number, songBpm: number) {
-  const beatmap: BeatmapPart[] = [];
-  let end = start;
-  let lastBeatmapPart: BeatmapPart | undefined = undefined;
+  const beatmap: BeatmapBar[] = [];
+
+  let bpm = songBpm;
+  let scroll = 1;
+  let measure: [number, number] = [4, 4];
+  let gogoTime = false;
+  let barline = true;
 
   for (let i = start; i < lines.length; i++) {
     const line = lines[i].toLowerCase().trim();
-    if (line.includes("#end")) break;
+    if (line.includes("#end")) return { end: i, beatmap };
 
     if (line.includes("#")) {
-      const { end, beatmapPart } = parseBeatmapPart(lines, i, songBpm, lastBeatmapPart);
-      beatmap.push(beatmapPart);
-      lastBeatmapPart = beatmapPart;
-      i = end;
-    }
-  }
-
-  return { end, beatmap };
-}
-
-function parseBeatmapPart(lines: string[], start: number, songBpm: number, lastBeatmapPart?: BeatmapPart): { end: number; beatmapPart: BeatmapPart } {
-  let partStart = false;
-
-  const beatmapPart: BeatmapPart = lastBeatmapPart
-    ? {
-        scroll: lastBeatmapPart.scroll,
-        measure: lastBeatmapPart.measure,
-        gogoTime: lastBeatmapPart.gogoTime,
-        bpm: lastBeatmapPart.bpm,
-        barline: lastBeatmapPart.barline,
-        notesArray: [],
-      }
-    : {
-        scroll: 1,
-        measure: [4, 4],
-        gogoTime: false,
-        bpm: songBpm,
-        barline: true,
-        notesArray: [],
-      };
-  for (let i = start; i < lines.length - 1; i++) {
-    const line = lines[i].toLowerCase().trim();
-
-    if (partStart) {
-      if (line.includes("#")) return { end: i - 1, beatmapPart };
-      else if (line.includes(",")) {
-        beatmapPart.notesArray.push(
-          line
-            .split(",")[0]
-            .split("")
-            .map((s) => Number(s))
-        );
-      } else if (!line.includes(":") && line.length > 0) {
-        beatmapPart.notesArray.push(
-          line
-            .split("//")[0]
-            .split("")
-            .map((s) => Number(s))
-        );
-      }
-    } else {
-      if (line.includes("#scroll")) beatmapPart.scroll = Number(line.split(" ")[1]);
-      else if (line.includes("#bpmchange")) beatmapPart.bpm = Number(line.split(" ")[1]);
+      if (line.includes("#scroll")) scroll = Number(line.split(" ")[1]);
+      else if (line.includes("#bpmchange")) bpm = Number(line.split(" ")[1]);
       else if (line.includes("#measure")) {
         const measureStrings = line.split(" ")[1].split("/");
-        beatmapPart.measure = [Number(measureStrings[0]), Number(measureStrings[1])];
-      } else if (line.includes("#gogostart")) beatmapPart.gogoTime = true;
-      else if (line.includes("#barlineoff")) beatmapPart.barline = false;
-      else if (line.includes("#barlineon")) beatmapPart.barline = true;
-      else if (line.includes(",")) {
-        partStart = true;
-        beatmapPart.notesArray.push(
-          line
-            .split(",")[0]
-            .split("")
-            .map((s) => Number(s))
-        );
-      } else if (!line.includes("#") && !line.includes(":") && line.length > 0) {
-        partStart = true;
-        beatmapPart.notesArray.push(
-          line
-            .split("//")[0]
-            .split("")
-            .map((s) => Number(s))
-        );
-      }
+        measure = [Number(measureStrings[0]), Number(measureStrings[1])];
+      } else if (line.includes("#gogostart")) gogoTime = true;
+      else if (line.includes("#barlineoff")) barline = false;
+      else if (line.includes("#barlineon")) barline = true;
+    } else if (line.includes(",")) {
+      const bar: BeatmapBar = { scroll, measure, gogoTime, bpm, barline, notes: [] };
+      bar.notes = line
+        .split(",")[0]
+        .split("")
+        .map((s) => Number(s));
+      beatmap.push(bar);
+    } else if (line.length > 0) {
+      const bar: BeatmapBar = { scroll, measure, gogoTime, bpm, barline, notes: [] };
+      bar.notes = line
+        .split("//")[0]
+        .split("")
+        .map((s) => Number(s));
+      beatmap.push(bar);
     }
   }
-  return { end: lines.length - 1, beatmapPart };
+
+  return { end: lines.length, beatmap };
 }

@@ -79,16 +79,7 @@ export async function fetchAllSongs() {
 // ------- 播放音乐 -------
 
 /**
- * 当前播放音乐的Url(base64)
+ * 当前播放的音乐
  */
-export const currentSongUrl = ref("");
+export const currentSong = ref<Song>();
 
-/**
- * 获取音乐的Url(base64)
- * @param songPath
- */
-export async function getSongUrl(songPath: string) {
-  const res = await fetch("/api/playSong?songPath=" + songPath);
-  const bs = await res.text();
-  currentSongUrl.value = "data:audio/mp3;base64," + bs;
-}

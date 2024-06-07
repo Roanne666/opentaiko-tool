@@ -66,7 +66,6 @@ import {
   NFlex,
 } from "naive-ui";
 import {
-  currentSongUrl,
   genre,
   allSongs,
   showSongs,
@@ -84,7 +83,6 @@ const levelSelect = ref<LevelTypes>(0);
 const scoreSelcet = ref<ScoreTypes>("全部");
 
 onMounted(() => {
-  currentSongUrl.value = "";
   showSongs.length = 0;
   showSongs.push(...allSongs);
 });

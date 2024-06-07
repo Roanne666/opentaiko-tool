@@ -1,5 +1,5 @@
 <template>
-  <audio ref="audioRef" :src="currentSongUrl" autoplay="true"></audio>
+  <audio ref="audioRef"></audio>
   <n-flex vertical>
     <div>
       <n-checkbox-group v-model:value="genreSelect">
@@ -40,6 +40,12 @@
       }"
       :single-line="false"
     ></n-data-table>
+    <n-divider></n-divider>
+    <div v-show="currentBeatmap.songName !== ''">
+      <n-icon v-if="audioRef && !audioRef.paused" @click="handleBeatmap(false)"><stop-icon /></n-icon>
+      <n-icon v-else @click="handleBeatmap(true)"><play-icon /></n-icon>
+    </div>
+
     <div style="margin: auto">
       <canvas ref="canvasRef" width="1060" height="1200" style=""></canvas>
     </div>
@@ -47,8 +53,9 @@
 </template>
 
 <script setup lang="ts">
-import { h, onMounted, ref, watch } from "vue";
+import { h, onMounted, reactive, ref, watch } from "vue";
 import {
+  NDivider,
   NButton,
   NDataTable,
   NIcon,
@@ -61,31 +68,25 @@ import {
   NRadio,
   NFlex,
 } from "naive-ui";
-import {
-  currentSongUrl,
-  genre,
-  getSongUrl,
-  allSongs,
-  showSongs,
-  levels,
-  type DifficultyTypes,
-  type LevelTypes,
-} from "@/stores/song";
+import { currentSong, genre, allSongs, showSongs, levels, type DifficultyTypes, type LevelTypes } from "@/stores/song";
 import type { DifficlutyType, Song } from "@server/song";
 import { PlayCircleOutline as PlayIcon, StopCircleOutline as StopIcon } from "@vicons/ionicons5";
 import { createBeatmap } from "@/scripts/beatmap";
+import { wait } from "@/scripts/beatmap/utils";
+import { playBeatmap } from "@/scripts/beatmap/play";
 
 const canvasRef = ref<HTMLCanvasElement>();
 
 const audioRef = ref<HTMLAudioElement>();
-const currentSong = ref("");
 
 const genreSelect = ref(genre);
 const difficultySelect = ref<DifficultyTypes>("all");
 const levelSelect = ref<LevelTypes>(0);
 
+const currentBeatmap = reactive<{ songName: string; difficulty: DifficlutyType }>({ songName: "", difficulty: "oni" });
+
 onMounted(() => {
-  currentSongUrl.value = "";
+  currentSong.value = undefined;
   showSongs.length = 0;
   showSongs.push(...allSongs);
 });
@@ -129,37 +130,6 @@ const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
     align: "center",
     width: 150,
   },
-  {
-    title: "播放",
-    key: "play",
-    align: "center",
-    width: 100,
-    render(row, rowIndex) {
-      return h(
-        NButton,
-        {
-          text: true,
-          style: {
-            fontSize: "24px",
-            paddingTop: "2px",
-            paddingBottom: "-2px",
-          },
-          onClick: async () => {
-            if (currentSong.value === row.name) {
-              currentSong.value = "";
-              audioRef.value?.pause();
-            } else {
-              currentSong.value = row.name;
-              await getSongUrl(row.dir + "\\" + row.name + ".ogg");
-              audioRef.value?.load();
-              audioRef.value?.play();
-            }
-          },
-        },
-        () => [h(NIcon, currentSong.value !== row.name ? () => [h(PlayIcon)] : () => [h(StopIcon)])]
-      );
-    },
-  },
   createDiffultyColumn("梅", "easy"),
   createDiffultyColumn("竹", "normal"),
   createDiffultyColumn("松", "hard"),
@@ -167,7 +137,7 @@ const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
   createDiffultyColumn("里", "extreme"),
 ];
 
-function createDiffultyColumn(title: string, key: string): DataTableColumnGroup<Song> {
+function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColumnGroup<Song> {
   return {
     title,
     key,
@@ -195,7 +165,11 @@ function createDiffultyColumn(title: string, key: string): DataTableColumnGroup<
               NButton,
               {
                 onClick() {
-                  createBeatmap(canvasRef.value as HTMLCanvasElement, row, key as DifficlutyType);
+                  stopMusic();
+                  currentSong.value = row;
+                  currentBeatmap.songName = row.name;
+                  currentBeatmap.difficulty = key;
+                  createBeatmap(canvasRef.value as HTMLCanvasElement, row, key);
                 },
               },
               () => "预览"
@@ -206,5 +180,35 @@ function createDiffultyColumn(title: string, key: string): DataTableColumnGroup<
       },
     ],
   };
+}
+
+async function handleBeatmap(play: boolean) {
+  if (!audioRef.value || !currentSong.value) return;
+  if (play) {
+    createBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentBeatmap.difficulty);
+
+    const { offset, dir, name } = currentSong.value;
+    audioRef.value.src = dir + "\\" + name + ".ogg";
+
+    if (offset >= 0) {
+      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentBeatmap.difficulty);
+      await wait(offset * 1000);
+      if (audioRef.value) audioRef.value.play();
+    } else {
+      if (audioRef.value) audioRef.value.play();
+      await wait(Math.abs(offset) * 1000);
+      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentBeatmap.difficulty);
+    }
+  } else {
+    currentSong.value = undefined;
+    stopMusic();
+  }
+}
+
+function stopMusic() {
+  if (audioRef.value) {
+    audioRef.value.pause();
+    audioRef.value.currentTime = 0;
+  }
 }
 </script>
