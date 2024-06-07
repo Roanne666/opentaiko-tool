@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { type BeatmapBar, parseBeatmap } from "./beatmap";
 import { isDir } from "./utils";
+import iconv from "iconv-lite";
 
 export type DifficlutyType = "easy" | "normal" | "hard" | "oni" | "extreme";
 
@@ -98,11 +99,17 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
     genre,
     bpm: 0,
     offset: 0,
-    wave: join(dir, songName + ".ogg"),
+    wave: "",
     difficulties: [],
   };
 
-  const content = readFileSync(filePath).toString();
+  let content = readFileSync(filePath).toString();
+  if (content.includes("�")) {
+    const binary = readFileSync(filePath, { encoding: "binary" });
+    const buffers = Buffer.from(binary, "binary");
+    content = iconv.decode(buffers, "Shift_JIS");
+  }
+
   const lines = content.split("\n");
 
   // 当前难度信息
@@ -118,6 +125,8 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].toLowerCase().trim();
+
+    if (line.includes("wave:")) song.wave = lines[i].split(":")[1];
 
     if (line.includes("bpm:")) song.bpm = Number(line.split(":")[1]);
 

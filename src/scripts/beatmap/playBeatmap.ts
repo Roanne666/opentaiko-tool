@@ -1,13 +1,14 @@
-import type { DifficlutyType, DifficultyInfo, Song } from "@server/song";
+import type { DifficultyInfo } from "@server/song";
 import { beatWidth, marginX, marginY, rowHeight, rowSpace } from "@/scripts/beatmap/const";
 import { DrawStrokeAction } from "./drawAction";
 import { ref } from "vue";
+import { getBeatmapRows } from "./utils";
 
 export const playing = ref(false);
 
 // TODO: 自动播放功能
-export async function playBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty: DifficlutyType) {
-  const { beatmap } = song.difficulties.find((d) => d.name === difficulty) as DifficultyInfo;
+export async function playBeatmap(canvas: HTMLCanvasElement, difficultyInfo: DifficultyInfo) {
+  const { beatmap } = difficultyInfo;
 
   const sourceData = canvas.toDataURL("image/jpg");
   const sourceImage = new Image();
@@ -18,23 +19,26 @@ export async function playBeatmap(canvas: HTMLCanvasElement, song: Song, difficu
 
     const context = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-    // 当前行拍子结束点（用于换行）
-    let nextBeatCount = beatmap[0].measure[0];
+    const beatmapRows = getBeatmapRows(beatmap);
 
     let currentX = marginX;
     let row = 0;
 
     let barIndex = 0;
-    // beat per second，每秒经过的拍子
-    let bps = song.bpm / 60;
+    // beat per second，每秒经过的节拍
+    let bps = beatmap[0].bpm / 60;
 
-    // 与4/4拍相对的速度，例如1/16拍则为4倍速
+    // 与4/4拍相对的速度，例如4/16拍则为4倍速
     let speed = beatmap[0].measure[1] / 4;
 
-    // 毫秒
+    // 上一个时间（用于计算动画）
     let lastTime = 0;
 
-    let throughSeconds = 0;
+    // 小节数据
+    let barPassDistance = 0;
+
+    // 行数据
+    let rowPassDistance = 0;
 
     nextFrame((time: number) => {
       if (!playing.value) return false;
@@ -44,26 +48,32 @@ export async function playBeatmap(canvas: HTMLCanvasElement, song: Song, difficu
         return true;
       }
 
-      if (currentX >= marginX + nextBeatCount * beatWidth) {
+      // 如果当前节拍数大于当前行的节拍数，则换行
+      if (rowPassDistance >= beatmapRows[row] * beatWidth) {
+        row += 1;
+        rowPassDistance -= beatmapRows[row] * beatWidth;
+        currentX = marginX + rowPassDistance;
+      }
+
+      // 经过的节拍数超过当前小节节拍数时，进入下一小节
+      if (barPassDistance >= beatmap[barIndex].measure[0] * beatWidth) {
+        // 小节可能会因为bpm过快而直接跳过，所以不能直接重置为0
+        barPassDistance -= beatmap[barIndex].measure[0] * beatWidth;
+
         barIndex += 1;
         if (barIndex >= beatmap.length) return false;
         const { bpm, measure } = beatmap[barIndex];
         bps = bpm / 60;
         speed = measure[1] / 4;
-        nextBeatCount += measure[0];
-
-        if (nextBeatCount > 16) {
-          row += 1;
-          currentX = marginX;
-          nextBeatCount = measure[0];
-        }
       }
 
       const interval = (time - lastTime) / 1000;
       lastTime = time;
-      throughSeconds += interval;
 
-      currentX += bps * interval * beatWidth * speed;
+      const distance = bps * interval * beatWidth * speed;
+      barPassDistance += distance;
+      rowPassDistance += distance;
+      currentX += distance;
 
       context.drawImage(sourceImage, 0, 0);
       new DrawStrokeAction({

@@ -69,11 +69,11 @@ import {
   NFlex,
 } from "naive-ui";
 import { genre, allSongs, showSongs, levels, type DifficultyTypes, type LevelTypes } from "@/stores/song";
-import type { DifficlutyType, Song } from "@server/song";
+import type { DifficlutyType, DifficultyInfo, Song } from "@server/song";
 import { PlayCircleOutline as PlayIcon, StopCircleOutline as StopIcon } from "@vicons/ionicons5";
 import { createBeatmap } from "@/scripts/beatmap";
 import { wait } from "@/scripts/beatmap/utils";
-import { playBeatmap, playing } from "@/scripts/beatmap/play";
+import { playBeatmap, playing } from "@/scripts/beatmap";
 
 const canvasRef = ref<HTMLCanvasElement>();
 
@@ -188,17 +188,21 @@ async function handleBeatmap(play: boolean) {
     playing.value = true;
     createBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentDifficulty.value);
 
-    const { offset, dir, name } = currentSong.value;
-    audioRef.value.src = dir + "\\" + name + ".ogg";
+    const difficultyInfo = currentSong.value.difficulties.find(
+      (d) => d.name === currentDifficulty.value
+    ) as DifficultyInfo;
+
+    const { offset, dir, wave } = currentSong.value;
+    audioRef.value.src = dir + "\\" + wave;
 
     if (offset >= 0) {
-      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentDifficulty.value);
+      playBeatmap(canvasRef.value as HTMLCanvasElement, difficultyInfo);
       await wait(offset * 1000);
       if (audioRef.value) audioRef.value.play();
     } else {
       if (audioRef.value) audioRef.value.play();
       await wait(Math.abs(offset) * 1000);
-      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentDifficulty.value);
+      playBeatmap(canvasRef.value as HTMLCanvasElement, difficultyInfo);
     }
   } else {
     playing.value = false;

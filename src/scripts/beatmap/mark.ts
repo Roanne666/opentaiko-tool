@@ -10,7 +10,7 @@ import { DrawTextAction } from "@/scripts/beatmap/drawAction";
 export function getMarkActions(
   beatCount: number,
   row: number,
-  column: number,
+  barCount: number,
   options?: {
     bpm?: number;
     scroll?: number;
@@ -20,8 +20,8 @@ export function getMarkActions(
 
   // 和小节数字标记的间隔
   let margin = 20;
-  if (row * 4 + column + 1 >= 10) margin = 25;
-  if (row * 4 + column + 1 >= 100) margin = 30;
+  if (barCount >= 10) margin = 25;
+  if (barCount >= 100) margin = 30;
 
   const firstX = marginX + beatCount * beatWidth + margin;
   const firstY = marginY + (rowHeight + rowSpace) * row - 5;
