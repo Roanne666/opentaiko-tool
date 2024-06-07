@@ -31,18 +31,21 @@ export function parseBeatmap(lines: string[], start: number, songBpm: number) {
       else if (line.includes("#barlineon")) barline = true;
     } else if (line.includes(",")) {
       const bar: BeatmapBar = { scroll, measure, gogoTime, bpm, barline, notes: [] };
-      bar.notes = line
-        .split(",")[0]
-        .split("")
-        .map((s) => Number(s));
+      bar.notes.push(
+        ...line
+          .split(",")[0]
+          .split("")
+          .map((s) => Number(s))
+      );
       beatmap.push(bar);
     } else if (line.length > 0) {
       const bar: BeatmapBar = { scroll, measure, gogoTime, bpm, barline, notes: [] };
-      bar.notes = line
-        .split("//")[0]
-        .split("")
-        .map((s) => Number(s));
-      beatmap.push(bar);
+      bar.notes.push(
+        ...line
+          .split("//")[0]
+          .split("")
+          .map((s) => Number(s))
+      );
     }
   }
 
