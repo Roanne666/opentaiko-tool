@@ -1,13 +1,12 @@
-import type { BeatmapBar } from "@server/beatmap";
 import type { DifficlutyType, DifficultyInfo, Song } from "@server/song";
-import { beatPerRow, beatWidth, marginX, marginY, rowHeight, rowSpace } from "@/scripts/beatmap/const";
+import { beatWidth, marginX, marginY, rowHeight, rowSpace } from "@/scripts/beatmap/const";
 import { DrawStrokeAction } from "./drawAction";
-import { currentSong } from "@/stores/song";
+import { ref } from "vue";
+
+export const playing = ref(false);
 
 // TODO: 自动播放功能
 export async function playBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty: DifficlutyType) {
-  currentSong.value = song;
-
   const { beatmap } = song.difficulties.find((d) => d.name === difficulty) as DifficultyInfo;
 
   const sourceData = canvas.toDataURL("image/jpg");
@@ -15,9 +14,12 @@ export async function playBeatmap(canvas: HTMLCanvasElement, song: Song, difficu
   sourceImage.src = sourceData;
 
   sourceImage.onload = async () => {
+    playing.value = true;
+
     const context = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-    await new Promise((resolve) => setTimeout(() => resolve(true), song.offset * 1000));
+    // 当前行拍子结束点（用于换行）
+    let nextBeatCount = beatmap[0].measure[0];
 
     let currentX = marginX;
     let row = 0;
@@ -35,25 +37,33 @@ export async function playBeatmap(canvas: HTMLCanvasElement, song: Song, difficu
     let throughSeconds = 0;
 
     nextFrame((time: number) => {
-      if (currentSong.value?.name !== song.name) return false;
+      if (!playing.value) return false;
 
       if (lastTime === 0) {
         lastTime = time;
         return true;
       }
 
-      if (currentX >= marginX + beatPerRow * beatWidth) {
-        row += 1;
-        currentX = marginX;
-      }
+      if (currentX >= marginX + nextBeatCount * beatWidth) {
+        barIndex += 1;
+        if (barIndex >= beatmap.length) return false;
+        const { bpm, measure } = beatmap[barIndex];
+        bps = bpm / 60;
+        speed = measure[1] / 4;
+        nextBeatCount += measure[0];
 
-      let bar = beatmap[barIndex];
+        if (nextBeatCount > 16) {
+          row += 1;
+          currentX = marginX;
+          nextBeatCount = measure[0];
+        }
+      }
 
       const interval = (time - lastTime) / 1000;
       lastTime = time;
       throughSeconds += interval;
 
-      currentX += bps * beatWidth * speed * interval;
+      currentX += bps * interval * beatWidth * speed;
 
       context.drawImage(sourceImage, 0, 0);
       new DrawStrokeAction({
@@ -64,15 +74,6 @@ export async function playBeatmap(canvas: HTMLCanvasElement, song: Song, difficu
         x2: currentX,
         y2: marginY + row * (rowSpace + rowHeight) + 45,
       }).draw(context);
-
-      if (throughSeconds * bps * speed >= bar.measure[0]) {
-        barIndex += 1;
-        if (barIndex >= beatmap.length) return false;
-        bar = beatmap[barIndex];
-        bps = bar.bpm / 60;
-        speed = bar.measure[1] / 4;
-        throughSeconds -= bar.measure[0] / bps / speed;
-      }
 
       return true;
     });

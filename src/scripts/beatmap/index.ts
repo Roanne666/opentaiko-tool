@@ -34,7 +34,7 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
   const beatmapRows = getBeatmapRows(beatmap);
   canvas.width = 2 * marginX + beatWidth * beatPerRow;
   canvas.height = marginY + beatmapRows * (rowHeight + rowSpace) - rowSpace + 25;
-  drawBackground(canvas, song, difficulty);
+  drawBackground(canvas, song.name, difficultyInfo);
 
   // 初始化数据
   const rowActions: DrawAction[] = [];

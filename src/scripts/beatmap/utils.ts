@@ -59,3 +59,8 @@ export function getBeatmapRows(beatmap: BeatmapBar[]) {
 
   return currentRow + 1;
 }
+
+
+export function calBarPos(){
+  
+}

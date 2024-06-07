@@ -41,8 +41,8 @@
       :single-line="false"
     ></n-data-table>
     <n-divider></n-divider>
-    <div v-show="currentBeatmap.songName !== ''">
-      <n-icon v-if="audioRef && !audioRef.paused" @click="handleBeatmap(false)"><stop-icon /></n-icon>
+    <div v-show="currentSong">
+      <n-icon v-if="playing" @click="handleBeatmap(false)"><stop-icon /></n-icon>
       <n-icon v-else @click="handleBeatmap(true)"><play-icon /></n-icon>
     </div>
 
@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { h, onMounted, reactive, ref, watch } from "vue";
+import { h, onMounted, ref, watch } from "vue";
 import {
   NDivider,
   NButton,
@@ -68,12 +68,12 @@ import {
   NRadio,
   NFlex,
 } from "naive-ui";
-import { currentSong, genre, allSongs, showSongs, levels, type DifficultyTypes, type LevelTypes } from "@/stores/song";
+import { genre, allSongs, showSongs, levels, type DifficultyTypes, type LevelTypes } from "@/stores/song";
 import type { DifficlutyType, Song } from "@server/song";
 import { PlayCircleOutline as PlayIcon, StopCircleOutline as StopIcon } from "@vicons/ionicons5";
 import { createBeatmap } from "@/scripts/beatmap";
 import { wait } from "@/scripts/beatmap/utils";
-import { playBeatmap } from "@/scripts/beatmap/play";
+import { playBeatmap, playing } from "@/scripts/beatmap/play";
 
 const canvasRef = ref<HTMLCanvasElement>();
 
@@ -83,7 +83,8 @@ const genreSelect = ref(genre);
 const difficultySelect = ref<DifficultyTypes>("all");
 const levelSelect = ref<LevelTypes>(0);
 
-const currentBeatmap = reactive<{ songName: string; difficulty: DifficlutyType }>({ songName: "", difficulty: "oni" });
+const currentSong = ref<Song>();
+const currentDifficulty = ref<DifficlutyType>("oni");
 
 onMounted(() => {
   currentSong.value = undefined;
@@ -167,8 +168,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
                 onClick() {
                   stopMusic();
                   currentSong.value = row;
-                  currentBeatmap.songName = row.name;
-                  currentBeatmap.difficulty = key;
+                  currentDifficulty.value = key;
                   createBeatmap(canvasRef.value as HTMLCanvasElement, row, key);
                 },
               },
@@ -185,22 +185,23 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
 async function handleBeatmap(play: boolean) {
   if (!audioRef.value || !currentSong.value) return;
   if (play) {
-    createBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentBeatmap.difficulty);
+    playing.value = true;
+    createBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentDifficulty.value);
 
     const { offset, dir, name } = currentSong.value;
     audioRef.value.src = dir + "\\" + name + ".ogg";
 
     if (offset >= 0) {
-      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentBeatmap.difficulty);
+      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentDifficulty.value);
       await wait(offset * 1000);
       if (audioRef.value) audioRef.value.play();
     } else {
       if (audioRef.value) audioRef.value.play();
       await wait(Math.abs(offset) * 1000);
-      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentBeatmap.difficulty);
+      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentDifficulty.value);
     }
   } else {
-    currentSong.value = undefined;
+    playing.value = false;
     stopMusic();
   }
 }

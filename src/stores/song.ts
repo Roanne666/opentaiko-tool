@@ -75,11 +75,3 @@ export async function fetchAllSongs() {
     genre.push(s.genre);
   }
 }
-
-// ------- 播放音乐 -------
-
-/**
- * 当前播放的音乐
- */
-export const currentSong = ref<Song>();
-
