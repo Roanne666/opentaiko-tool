@@ -86,7 +86,6 @@ export function parseBeatmap(lines: string[], start: number) {
       );
 
       const beats = sliceBarToBeats(currentBar, lastMeasure[0]);
-
       beatmap.beats.push(...beats);
 
       currentBar = [];
@@ -108,18 +107,19 @@ export function parseBeatmap(lines: string[], start: number) {
 }
 
 function sliceBarToBeats(notes: number[], measure: number) {
-  let notePerBeat = notes.length > measure ? notes.length / measure : measure;
+  let notePerBeat = notes.length > measure ? notes.length / measure : notes.length;
 
   const beats: number[][] = [];
   let currentBeat: number[] = [];
-  for (let i = 0; i < notes.length; i++) {
-    const note = notes[i];
+  for (const note of notes) {
     currentBeat.push(note);
     if (currentBeat.length >= notePerBeat) {
       beats.push(currentBeat);
       currentBeat = [];
     }
   }
+  if (currentBeat.length > 0) beats.push(currentBeat);
+
   return beats;
 }
 

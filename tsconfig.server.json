@@ -10,7 +10,7 @@
     "removeComments": true,
     "strict": true,
     "rootDir": "server",
-    "outDir": "dist",
+    "outDir": "server_dist",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./server/*"]

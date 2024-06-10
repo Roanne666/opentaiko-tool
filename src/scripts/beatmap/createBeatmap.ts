@@ -17,7 +17,7 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
 
   const { beatmap, balloon } = difficultyInfo;
   const beatmapRows = getBeatmapRows(beatmap);
-
+  
   // 调整canvas大小并绘制背景
   canvas.width = 2 * marginX + beatWidth * beatPerRow;
   canvas.height = marginY + beatmapRows.length * (rowHeight + rowSpace) - rowSpace + 25;
@@ -81,7 +81,6 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
     if (change?.gogotime !== undefined) gogotime = change.gogotime;
     if (change?.delay !== undefined) delay = change.delay;
     if (change?.measure !== undefined) measure = change.measure;
-
 
     // 绘制新行
     if (newRow) {

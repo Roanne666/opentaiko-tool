@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
-import { Beatmap, parseBeatmap } from "./beatmap";
+import { type Beatmap, parseBeatmap } from "./beatmap";
 import { isDir } from "./utils";
 import iconv from "iconv-lite";
 
@@ -28,7 +28,7 @@ export type Song = {
 
 const defaultExclude = ["S1 Dan-i Dojo", "S2 Taiko Towers", "X1 Favorite", "X2 Recent", "X3 Search By Difficulty"];
 
-export async function loadSongs(root = "Songs", exclude = defaultExclude) {
+export async function loadSongs(root = "../Songs", exclude = defaultExclude) {
   const stat = await isDir(root);
   if (!stat) return [];
   const songs: Song[] = await parseSongs(root, exclude);

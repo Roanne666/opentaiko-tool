@@ -1,14 +1,15 @@
-import type { DifficultyInfo } from "@server/song";
+import type { Beatmap } from "@server/beatmap";
+import type { DifficultyInfo, Song } from "@server/song";
 import { beatWidth, marginX, marginY, rowHeight, rowSpace } from "@/scripts/beatmap/const";
 import { DrawStrokeAction } from "./drawAction";
 import { ref } from "vue";
 import { getBeatmapRows } from "./utils";
-import type { Measure } from "@server/beatmap";
+import { audioElement } from "@/stores/song";
 
 export const playing = ref(false);
 
 // TODO: 自动播放功能
-export async function playBeatmap(canvas: HTMLCanvasElement, songBpm: number, difficultyInfo: DifficultyInfo) {
+export async function playBeatmap(canvas: HTMLCanvasElement, song: Song, difficultyInfo: DifficultyInfo) {
   const { beatmap } = difficultyInfo;
 
   const sourceData = canvas.toDataURL("image/jpg");
@@ -22,60 +23,15 @@ export async function playBeatmap(canvas: HTMLCanvasElement, songBpm: number, di
 
     const beatmapRows = getBeatmapRows(beatmap);
 
-    let currentX = marginX;
-    let row = 0;
-
-    let totalBeatCount = 0;
-
-    // beat per second，每秒经过的节拍
-    let bps = songBpm / 60;
-
-    // 与4/4拍相对的速度，例如4/16拍则为4倍速
-    let speed = 1;
-
-    // 上一个时间（用于计算动画）
-    let lastTime = 0;
-
-    // 节拍距离
-    let beatPassDistance = 0;
-
-    // 行距离
-    let rowPassDistance = 0;
-
-    nextFrame((time: number) => {
+    nextFrame(() => {
+      if (audioElement.paused) {
+        playing.value = false;
+        return false;
+      }
       if (!playing.value) return false;
+      if (audioElement.currentTime + song.offset <= 0) return true;
 
-      if (lastTime === 0) {
-        lastTime = time;
-        return true;
-      }
-
-      const change = beatmap.changes[totalBeatCount];
-      if (change?.bpm) bps = change.bpm / 60;
-      if (change?.measure) speed = change.measure[1] / 4;
-
-      const interval = (time - lastTime) / 1000;
-      lastTime = time;
-
-      const distance = bps * interval * beatWidth * speed;
-      beatPassDistance += distance;
-      rowPassDistance += distance;
-      currentX += distance;
-
-      // 当前行经过的距离大于当前行的总节拍宽度，则换行
-      if (rowPassDistance >= beatmapRows[row] * beatWidth) {
-        rowPassDistance -= beatmapRows[row] * beatWidth;
-        currentX = marginX + rowPassDistance;
-        row += 1;
-      }
-
-      // 当前经过的距离超过当前节拍距离时，进入下一节拍
-      if (beatPassDistance >= beatWidth) {
-        // 小节可能会因为bpm过快而直接跳过，所以不能直接重置为0
-        beatPassDistance -= beatWidth;
-        totalBeatCount += 1;
-        if (totalBeatCount >= beatmap.beats.length) return false;
-      }
+      const { currentX, row } = getCurrentPos(beatmap, beatmapRows, song.bpm, audioElement.currentTime + song.offset);
 
       context.drawImage(sourceImage, 0, 0);
       new DrawStrokeAction({
@@ -92,8 +48,45 @@ export async function playBeatmap(canvas: HTMLCanvasElement, songBpm: number, di
   };
 }
 
-function nextFrame(callback: (time: number) => boolean) {
-  requestAnimationFrame((time: number) => {
-    if (callback(time)) nextFrame(callback);
+function nextFrame(callback: () => boolean) {
+  requestAnimationFrame(() => {
+    if (callback()) nextFrame(callback);
   });
+}
+
+function getCurrentPos(beatmap: Beatmap, beatmapRows: number[], songBpm: number, time: number): { currentX: number; row: number } {
+  let currentX = marginX;
+
+  let totalBeatCount = 0;
+
+  let row = 0;
+  let rowBeatCount = 0;
+
+  // beat per second，每秒经过的节拍
+  let bps = songBpm / 60;
+
+  // 与4/4拍相对的速度，例如4/16拍则为4倍速
+  let speed = 1;
+
+  while (time > 0) {
+    const change = beatmap.changes[totalBeatCount];
+    if (change?.bpm) bps = change.bpm / 60;
+    if (change?.measure) speed = change.measure[1] / 4;
+
+    const beatTime = 1 / bps / speed;
+    if (time > beatTime) {
+      time -= beatTime;
+      rowBeatCount += 1;
+      if (rowBeatCount >= beatmapRows[row]) {
+        rowBeatCount = 0;
+        row += 1;
+      }
+    } else {
+      rowBeatCount += bps * time * speed;
+      currentX = marginX + rowBeatCount * beatWidth;
+      break;
+    }
+  }
+
+  return { currentX, row };
 }

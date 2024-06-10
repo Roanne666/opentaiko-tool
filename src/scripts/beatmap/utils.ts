@@ -30,12 +30,14 @@ export function getBeatmapRows(beatmap: Beatmap) {
     const notes = beatmap.beats[i];
 
     const change = beatmap.changes[i];
-    const measureChange = change?.measure ? lastMeasure[0] !== change.measure[0] : false;
+    const measureChange = false;
 
-    if (change?.measure && measureChange) lastMeasure = change.measure;
+    if (change?.measure) lastMeasure = change.measure;
 
-    let beatOverflow = rowBeatCount === 16;
-    if (rowBeatCount < 16 && barBeatCount === 0 && rowBeatCount + lastMeasure[0] > 16) {
+    let beatOverflow = false;
+    if (rowBeatCount >= 16) {
+      beatOverflow = true;
+    } else if (barBeatCount === 0 && rowBeatCount + lastMeasure[0] > 16) {
       beatOverflow = true;
     }
 

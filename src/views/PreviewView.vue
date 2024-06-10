@@ -78,8 +78,6 @@ onMounted(() => {
   showSongs.push(...allSongs);
 });
 
-onMounted(() => {});
-
 // 根据选项过滤歌曲
 watch([genreSelect, difficultySelect, levelSelect], () => {
   const filterSongs = allSongs.filter((s) => {
@@ -180,13 +178,13 @@ async function handleBeatmap(play: boolean) {
     audioElement.src = dir + "\\" + wave;
 
     if (offset >= 0) {
-      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value.bpm, difficultyInfo);
+      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, difficultyInfo);
       await wait(offset * 1000);
       audioElement.play();
     } else {
       audioElement.play();
       await wait(Math.abs(offset) * 1000);
-      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value.bpm, difficultyInfo);
+      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, difficultyInfo);
     }
   } else {
     playing.value = false;
