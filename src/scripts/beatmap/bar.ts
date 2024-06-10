@@ -12,7 +12,7 @@ import { DrawRectAction, DrawStrokeAction, DrawTextAction, type DrawAction } fro
  */
 export function getBarActions(barCount: number, measure: [number, number], beatCount: number, row: number, gogotime = false) {
   const subParts = measure[0] * 2;
-  const partWidth = beatWidth * measure[0];
+  const barWidth = beatWidth * measure[0];
 
   const beginX = marginX + beatCount * beatWidth;
   const beginY = marginY + (rowHeight + rowSpace) * row - 15;
@@ -25,13 +25,13 @@ export function getBarActions(barCount: number, measure: [number, number], beatC
   if (gogotime) {
     // 第一小节时补齐左侧，最后小节时补齐右侧
     if (beatCount === 0) {
-      const gogoTimeAction = new DrawRectAction({ color: gogotimeBgColor, x: beginX - marginX, y: beginY - 2, width: partWidth + marginX, height: 15 });
+      const gogoTimeAction = new DrawRectAction({ color: gogotimeBgColor, x: beginX - marginX, y: beginY - 2, width: barWidth + marginX, height: 15 });
       actions.push(gogoTimeAction);
     } else if (beatCount + measure[0] === 16) {
-      const gogoTimeAction = new DrawRectAction({ color: gogotimeBgColor, x: beginX, y: beginY - 2, width: partWidth + marginX, height: 15 });
+      const gogoTimeAction = new DrawRectAction({ color: gogotimeBgColor, x: beginX, y: beginY - 2, width: barWidth + marginX, height: 15 });
       actions.push(gogoTimeAction);
     } else {
-      const gogoTimeAction = new DrawRectAction({ color: gogotimeBgColor, x: beginX, y: beginY - 2, width: partWidth, height: 15 });
+      const gogoTimeAction = new DrawRectAction({ color: gogotimeBgColor, x: beginX, y: beginY - 2, width: barWidth, height: 15 });
       actions.push(gogoTimeAction);
     }
   }
@@ -54,9 +54,9 @@ export function getBarActions(barCount: number, measure: [number, number], beatC
   // 细分竖线
   for (let i = 1; i < subParts; i++) {
     const subLineColor = i % 2 === 0 ? lightLineColor : drakLineColor;
-    const subBeginX = marginX + beatCount * beatWidth + (partWidth / subParts) * i;
+    const subBeginX = marginX + beatCount * beatWidth + (barWidth / subParts) * i;
     const subBeginY = marginY + (rowHeight + rowSpace) * row + 4;
-    const subEndX = marginX + beatCount * beatWidth + (partWidth / subParts) * i;
+    const subEndX = marginX + beatCount * beatWidth + (barWidth / subParts) * i;
     const subEndY = marginY + rowHeight + (rowHeight + rowSpace) * row - 4;
 
     const subLineAction = new DrawStrokeAction({ lineWidth: 2, color: subLineColor, x1: subBeginX, y1: subBeginY, x2: subEndX, y2: subEndY });
@@ -64,9 +64,9 @@ export function getBarActions(barCount: number, measure: [number, number], beatC
   }
 
   // 结束线
-  const finalBeginX = marginX + beatCount * beatWidth + partWidth;
+  const finalBeginX = marginX + beatCount * beatWidth + barWidth;
   const finalBeginY = marginY + (rowHeight + rowSpace) * row - 15;
-  const finalEndX = marginX + beatCount * beatWidth + partWidth;
+  const finalEndX = marginX + beatCount * beatWidth + barWidth;
   const finalEndY = marginY + (rowHeight + rowSpace) * row + rowHeight;
 
   const endLineAction = new DrawStrokeAction({ lineWidth: 2, color: "white", x1: finalBeginX, y1: finalBeginY, x2: finalEndX, y2: finalEndY });

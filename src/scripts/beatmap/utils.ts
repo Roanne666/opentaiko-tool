@@ -1,4 +1,4 @@
-import type { BeatmapBar } from "@server/beatmap";
+import type { Beatmap, Measure } from "@server/beatmap";
 
 export async function wait(time: number) {
   await new Promise((resolve) => setTimeout(() => resolve(true), time));
@@ -9,39 +9,47 @@ export async function wait(time: number) {
  * @param beatmap
  * @returns
  */
-export function getBeatmapRows(beatmap: BeatmapBar[]) {
+export function getBeatmapRows(beatmap: Beatmap) {
   let rows: number[] = [];
 
-  // 当前行的小节数
-  let rowBeatCount = 0;
+  // 当前行的节拍数
+  let rowBeatCount = -1;
 
-  let lastMeasure: [number, number] = beatmap[0].measure;
+  let barBeatCount = -1;
+
+  let lastMeasure: Measure = [4, 4];
 
   // 当前绘制的长条，small和big为黄条，ballon为气球
   let currentLong: "" | "small" | "big" | "balloon" = "";
 
-  for (let i = 0; i < beatmap.length; i++) {
-    const bar = beatmap[i];
-    const { measure, notes } = bar;
+  for (let i = 0; i < beatmap.beats.length; i++) {
+    rowBeatCount += 1;
+    barBeatCount += 1;
+    if (barBeatCount >= lastMeasure[0]) barBeatCount = 0;
 
-    rowBeatCount += measure[0];
+    const notes = beatmap.beats[i];
 
-    const beatOverflow = rowBeatCount > 16;
-    const measureChange = lastMeasure[0] !== measure[0];
+    const change = beatmap.changes[i];
+    const measureChange = change?.measure ? lastMeasure[0] !== change.measure[0] : false;
+
+    if (change?.measure && measureChange) lastMeasure = change.measure;
+
+    let beatOverflow = rowBeatCount === 16;
+    if (rowBeatCount < 16 && barBeatCount === 0 && rowBeatCount + lastMeasure[0] > 16) {
+      beatOverflow = true;
+    }
 
     // 超过一行小节数时或者节拍变化时换行
     if (beatOverflow) {
-      rows.push(rowBeatCount - measure[0]);
-      rowBeatCount = measure[0];
+      rows.push(rowBeatCount);
+      rowBeatCount = 0;
     } else if (measureChange) {
       // 没有超过小节数，仅节拍变化时，长条优先不换行
       if (currentLong === "") {
-        rows.push(rowBeatCount - measure[0]);
-        rowBeatCount = measure[0];
+        rows.push(rowBeatCount);
+        rowBeatCount = 0;
       }
     }
-
-    lastMeasure = measure;
 
     // 绘制音符
     for (let j = 0; j < notes.length; j++) {

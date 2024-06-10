@@ -3,11 +3,12 @@ import { beatWidth, marginX, marginY, rowHeight, rowSpace } from "@/scripts/beat
 import { DrawStrokeAction } from "./drawAction";
 import { ref } from "vue";
 import { getBeatmapRows } from "./utils";
+import type { Measure } from "@server/beatmap";
 
 export const playing = ref(false);
 
 // TODO: 自动播放功能
-export async function playBeatmap(canvas: HTMLCanvasElement, difficultyInfo: DifficultyInfo) {
+export async function playBeatmap(canvas: HTMLCanvasElement, songBpm: number, difficultyInfo: DifficultyInfo) {
   const { beatmap } = difficultyInfo;
 
   const sourceData = canvas.toDataURL("image/jpg");
@@ -24,20 +25,21 @@ export async function playBeatmap(canvas: HTMLCanvasElement, difficultyInfo: Dif
     let currentX = marginX;
     let row = 0;
 
-    let barIndex = 0;
+    let totalBeatCount = 0;
+
     // beat per second，每秒经过的节拍
-    let bps = beatmap[0].bpm / 60;
+    let bps = songBpm / 60;
 
     // 与4/4拍相对的速度，例如4/16拍则为4倍速
-    let speed = beatmap[0].measure[1] / 4;
+    let speed = 1;
 
     // 上一个时间（用于计算动画）
     let lastTime = 0;
 
-    // 小节数据
-    let barPassDistance = 0;
+    // 节拍距离
+    let beatPassDistance = 0;
 
-    // 行数据
+    // 行距离
     let rowPassDistance = 0;
 
     nextFrame((time: number) => {
@@ -48,32 +50,32 @@ export async function playBeatmap(canvas: HTMLCanvasElement, difficultyInfo: Dif
         return true;
       }
 
-      // 如果当前节拍数大于当前行的节拍数，则换行
-      if (rowPassDistance >= beatmapRows[row] * beatWidth) {
-        row += 1;
-        rowPassDistance -= beatmapRows[row] * beatWidth;
-        currentX = marginX + rowPassDistance;
-      }
-
-      // 经过的节拍数超过当前小节节拍数时，进入下一小节
-      if (barPassDistance >= beatmap[barIndex].measure[0] * beatWidth) {
-        // 小节可能会因为bpm过快而直接跳过，所以不能直接重置为0
-        barPassDistance -= beatmap[barIndex].measure[0] * beatWidth;
-
-        barIndex += 1;
-        if (barIndex >= beatmap.length) return false;
-        const { bpm, measure } = beatmap[barIndex];
-        bps = bpm / 60;
-        speed = measure[1] / 4;
-      }
+      const change = beatmap.changes[totalBeatCount];
+      if (change?.bpm) bps = change.bpm / 60;
+      if (change?.measure) speed = change.measure[1] / 4;
 
       const interval = (time - lastTime) / 1000;
       lastTime = time;
 
       const distance = bps * interval * beatWidth * speed;
-      barPassDistance += distance;
+      beatPassDistance += distance;
       rowPassDistance += distance;
       currentX += distance;
+
+      // 当前行经过的距离大于当前行的总节拍宽度，则换行
+      if (rowPassDistance >= beatmapRows[row] * beatWidth) {
+        rowPassDistance -= beatmapRows[row] * beatWidth;
+        currentX = marginX + rowPassDistance;
+        row += 1;
+      }
+
+      // 当前经过的距离超过当前节拍距离时，进入下一节拍
+      if (beatPassDistance >= beatWidth) {
+        // 小节可能会因为bpm过快而直接跳过，所以不能直接重置为0
+        beatPassDistance -= beatWidth;
+        totalBeatCount += 1;
+        if (totalBeatCount >= beatmap.beats.length) return false;
+      }
 
       context.drawImage(sourceImage, 0, 0);
       new DrawStrokeAction({

@@ -1,5 +1,4 @@
 <template>
-  <audio ref="audioRef"></audio>
   <n-flex vertical>
     <div>
       <n-checkbox-group v-model:value="genreSelect">
@@ -54,30 +53,17 @@
 
 <script setup lang="ts">
 import { h, onMounted, ref, watch } from "vue";
-import {
-  NDivider,
-  NButton,
-  NDataTable,
-  NIcon,
-  type DataTableColumn,
-  type DataTableColumnGroup,
-  NCheckboxGroup,
-  NSpace,
-  NCheckbox,
-  NRadioGroup,
-  NRadio,
-  NFlex,
-} from "naive-ui";
-import { genre, allSongs, showSongs, levels, type DifficultyTypes, type LevelTypes } from "@/stores/song";
+import { NDivider, NButton, NDataTable, NIcon, type DataTableColumn, type DataTableColumnGroup, NCheckboxGroup, NSpace, NCheckbox, NRadioGroup, NRadio, NFlex } from "naive-ui";
+import { genre, allSongs, showSongs, levels, type DifficultyTypes, type LevelTypes, audioElement } from "@/stores/song";
 import type { DifficlutyType, DifficultyInfo, Song } from "@server/song";
 import { PlayCircleOutline as PlayIcon, StopCircleOutline as StopIcon } from "@vicons/ionicons5";
 import { createBeatmap } from "@/scripts/beatmap";
 import { wait } from "@/scripts/beatmap/utils";
 import { playBeatmap, playing } from "@/scripts/beatmap";
 
-const canvasRef = ref<HTMLCanvasElement>();
+document.body.appendChild(audioElement);
 
-const audioRef = ref<HTMLAudioElement>();
+const canvasRef = ref<HTMLCanvasElement>();
 
 const genreSelect = ref(genre);
 const difficultySelect = ref<DifficultyTypes>("all");
@@ -183,26 +169,24 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
 }
 
 async function handleBeatmap(play: boolean) {
-  if (!audioRef.value || !currentSong.value) return;
+  if (!currentSong.value) return;
   if (play) {
     playing.value = true;
     createBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentDifficulty.value);
 
-    const difficultyInfo = currentSong.value.difficulties.find(
-      (d) => d.name === currentDifficulty.value
-    ) as DifficultyInfo;
+    const difficultyInfo = currentSong.value.difficulties.find((d) => d.name === currentDifficulty.value) as DifficultyInfo;
 
     const { offset, dir, wave } = currentSong.value;
-    audioRef.value.src = dir + "\\" + wave;
+    audioElement.src = dir + "\\" + wave;
 
     if (offset >= 0) {
-      playBeatmap(canvasRef.value as HTMLCanvasElement, difficultyInfo);
+      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value.bpm, difficultyInfo);
       await wait(offset * 1000);
-      if (audioRef.value) audioRef.value.play();
+      audioElement.play();
     } else {
-      if (audioRef.value) audioRef.value.play();
+      audioElement.play();
       await wait(Math.abs(offset) * 1000);
-      playBeatmap(canvasRef.value as HTMLCanvasElement, difficultyInfo);
+      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value.bpm, difficultyInfo);
     }
   } else {
     playing.value = false;
@@ -211,9 +195,7 @@ async function handleBeatmap(play: boolean) {
 }
 
 function stopMusic() {
-  if (audioRef.value) {
-    audioRef.value.pause();
-    audioRef.value.currentTime = 0;
-  }
+  audioElement.pause();
+  audioElement.currentTime = 0;
 }
 </script>
