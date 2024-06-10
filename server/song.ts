@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from "fs";
-import { join } from "path";
+import { join, resolve } from "path";
 import { type Beatmap, parseBeatmap } from "./beatmap";
 import { isDir } from "./utils";
 import iconv from "iconv-lite";
@@ -28,7 +28,7 @@ export type Song = {
 
 const defaultExclude = ["S1 Dan-i Dojo", "S2 Taiko Towers", "X1 Favorite", "X2 Recent", "X3 Search By Difficulty"];
 
-export async function loadSongs(root = "../Songs", exclude = defaultExclude) {
+export async function loadSongs(root: string, exclude = defaultExclude) {
   const stat = await isDir(root);
   if (!stat) return [];
   const songs: Song[] = await parseSongs(root, exclude);
@@ -36,7 +36,7 @@ export async function loadSongs(root = "../Songs", exclude = defaultExclude) {
 }
 
 async function parseSongs(path: string, exclude: string[], use1P = true) {
-  return new Promise<Song[]>(async (resolve) => {
+  return new Promise<Song[]>(async (res) => {
     const songs: Song[] = [];
 
     // 读取类目文件夹
@@ -80,7 +80,7 @@ async function parseSongs(path: string, exclude: string[], use1P = true) {
         }
       }
     }
-    resolve(songs);
+    res(songs);
   });
 }
 

@@ -7,10 +7,16 @@ import { type Song, loadSongs } from "./song";
 const app = express();
 
 app.use(express.static("web"));
+app.use(express.static(".."));
 
 app.get("/api/songs", async (req: Request, res: Response, next: NextFunction) => {
-  const songs: Song[] = await loadSongs();
-  res.send(songs);
+  if (process.env.NODE_ENV) {
+    const songs: Song[] = await loadSongs("Songs");
+    res.send(songs);
+  } else {
+    const songs: Song[] = await loadSongs("../Songs");
+    res.send(songs);
+  }
 });
 
 if (process.env.NODE_ENV) {
@@ -20,7 +26,11 @@ if (process.env.NODE_ENV) {
 } else {
   const server = app.listen(0, () => {
     const address = server.address() as AddressInfo;
-    console.log(`Example app listening on http://localhost:${address.port}`);
+    console.log(`- opentaiko启动 作者：Roanne（滑滑） B站：https://space.bilibili.com/23383232`);
+    console.log(`- 正在打开网页`);
     exec(`start http://localhost:${address.port}`);
+    console.log(`- 如意外关闭请重新打开网页：http://localhost:${address.port}`);
+    console.log(`- 请勿重复启动软件，否则可能会造成卡顿`);
+    console.log(`- 使用完毕后请关闭此窗口`);
   });
 }
