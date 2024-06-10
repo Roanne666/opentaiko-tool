@@ -17,10 +17,10 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
 
   const { beatmap, balloon } = difficultyInfo;
   const beatmapRows = getBeatmapRows(beatmap);
-  
+
   // 调整canvas大小并绘制背景
   canvas.width = 2 * marginX + beatWidth * beatPerRow;
-  canvas.height = marginY + beatmapRows.length * (rowHeight + rowSpace) - rowSpace + 25;
+  canvas.height = marginY + (beatmapRows.length + 1) * (rowHeight + rowSpace) - rowSpace + 25;
   drawBackground(canvas, song.name, difficultyInfo);
 
   // 初始化数据
