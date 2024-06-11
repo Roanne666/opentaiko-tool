@@ -1,5 +1,7 @@
 import type { DifficlutyType, Song } from "@server/song";
-import { reactive, ref } from "vue";
+import type { DataTableColumn, DataTableColumnGroup } from "naive-ui";
+import type { TableBaseColumn } from "naive-ui/es/data-table/src/interface";
+import { reactive } from "vue";
 
 // ------- 常量 -------
 export type DifficultyTypes = "all" | DifficlutyType;
@@ -31,6 +33,42 @@ export const scores = {
  */
 export type ScoreTypes = keyof typeof scores;
 
+/**
+ * 表格基础列
+ */
+export const basicColumns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
+  {
+    title: "曲名",
+    key: "name",
+    align: "center",
+    width: 250,
+  },
+  {
+    title: "类目",
+    key: "genre",
+    align: "center",
+    width: 150,
+  },
+];
+
+/**
+ * 等级子列
+ * @param key
+ * @returns
+ */
+export const createlevelSubCloumn = (key: DifficlutyType): TableBaseColumn<Song> => {
+  return {
+    title: "等级",
+    key: `${key}level`,
+    align: "center",
+    width: 80,
+    render(row, rowIndex) {
+      const d = row.difficulties.find((d) => d.name === key);
+      return d ? `${d.level}★` : "";
+    },
+  };
+};
+
 // ------- 歌曲相关 -------
 
 /**
@@ -46,7 +84,7 @@ export const showSongs = reactive<Song[]>([]);
 /**
  * 歌曲类目
  */
-export const genre = reactive<string[]>([]);
+export const genres = reactive<string[]>([]);
 
 /**
  * 获取所有歌曲
@@ -64,14 +102,16 @@ export async function fetchAllSongs() {
 
   const newSongs = await res.json();
 
+  console.log(newSongs);
+
   allSongs.length = 0;
   allSongs.push(...newSongs);
   showSongs.length = 0;
   showSongs.push(...newSongs);
 
   for (const s of allSongs) {
-    if (genre.includes(s.genre)) continue;
-    genre.push(s.genre);
+    if (genres.includes(s.genre)) continue;
+    genres.push(s.genre);
   }
 }
 

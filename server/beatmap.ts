@@ -1,6 +1,13 @@
 export type Measure = [number, number];
 
-export type Change = { bpm?: number; hs?: number; measure?: Measure; gogotime?: boolean; barline?: boolean; delay?: number };
+export type Change = {
+  bpm?: number;
+  hs?: number;
+  measure?: Measure;
+  gogotime?: boolean;
+  barline?: boolean;
+  delay?: number;
+};
 
 export type Beatmap = {
   changes: {
@@ -61,6 +68,13 @@ export function parseBeatmap(lines: string[], start: number) {
       else if (line.includes("#barlineon")) setChange(beatmap.changes, totalBeatCount, "barline", true);
       else if (line.includes("#barlineoff")) setChange(beatmap.changes, totalBeatCount, "barline", false);
     } else if (line.includes(",")) {
+      currentBar.push(
+        ...line
+          .split(",")[0]
+          .split("")
+          .map((s) => Number(s))
+      );
+
       // 在小节中间改变数据
       if (noteCount > 0) {
         const changeIndex = totalBeatCount + (noteCount / currentBar.length) * lastMeasure[0];
@@ -77,13 +91,6 @@ export function parseBeatmap(lines: string[], start: number) {
           lastDelay = 0;
         }
       }
-
-      currentBar.push(
-        ...line
-          .split(",")[0]
-          .split("")
-          .map((s) => Number(s))
-      );
 
       const beats = sliceBarToBeats(currentBar, lastMeasure[0]);
       beatmap.beats.push(...beats);
@@ -107,7 +114,23 @@ export function parseBeatmap(lines: string[], start: number) {
 }
 
 function sliceBarToBeats(notes: number[], measure: number) {
-  let notePerBeat = notes.length > measure ? notes.length / measure : notes.length;
+  // 如果音符数少于拍子数，则补全音符
+  if (notes.length === 0) {
+    for (let i = 0; i < measure; i++) {
+      notes.push(0);
+    }
+  } else if (notes.length < measure) {
+    const beats = notes.map((v) => [v]);
+    notes.length = 0;
+    for (const beat of beats) {
+      for (let i = 1; i < measure; i++) {
+        beat.push(0);
+      }
+      notes.push(...beat);
+    }
+  }
+
+  let notePerBeat = notes.length / measure;
 
   const beats: number[][] = [];
   let currentBeat: number[] = [];

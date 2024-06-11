@@ -1,73 +1,65 @@
-<template>
-  <n-flex vertical>
-    <div>
-      <n-checkbox-group v-model:value="genreSelect">
-        <n-space item-style="display: flex;">
-          <span>类目：</span>
-          <n-checkbox v-for="g of genre" :value="g" :label="g" />
-        </n-space>
-      </n-checkbox-group>
-    </div>
-    <div>
-      <n-radio-group v-model:value="difficultySelect" name="radiogroup">
-        <n-space>
-          <span>难度：</span>
-          <n-radio value="all"> 全部 </n-radio>
-          <n-radio value="easy"> 梅 </n-radio>
-          <n-radio value="normal"> 竹 </n-radio>
-          <n-radio value="hard"> 松 </n-radio>
-          <n-radio value="oni"> 鬼 </n-radio>
-          <n-radio value="extreme"> 里 </n-radio>
-        </n-space>
-      </n-radio-group>
-    </div>
-    <div>
-      <n-radio-group v-model:value="levelSelect" name="radiogroup">
-        <n-space>
-          <span>等级：</span>
-          <n-radio v-for="l of levels" :key="`${l}`" :value="l">
-            {{ l === 0 ? "全部" : l }}
-          </n-radio>
-        </n-space>
-      </n-radio-group>
-    </div>
-    <n-data-table
-      :columns="columns"
-      :data="showSongs"
-      :pagination="{
-        pageSize: 10,
-      }"
-      :single-line="false"
-    ></n-data-table>
-    <n-divider></n-divider>
-    <div v-show="currentSong">
-      <n-icon v-if="playing" @click="handleBeatmap(false)"><stop-icon /></n-icon>
-      <n-icon v-else @click="handleBeatmap(true)"><play-icon /></n-icon>
-    </div>
+<style>
+/*
+  进入和离开动画可以使用不同
+  持续时间和速度曲线。
+*/
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.3s;
+}
 
-    <div style="margin: auto">
-      <canvas ref="canvasRef" width="1060" height="1200" style=""></canvas>
-    </div>
-  </n-flex>
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(1080px);
+  opacity: 0;
+}
+</style>
+
+<template>
+  <transition @enter="onEnter" name="slide-fade" mode="out-in">
+    <n-flex v-if="!currentSong" vertical>
+      <song-filter :use-score="false"></song-filter>
+      <n-data-table
+        :columns="columns"
+        :data="showSongs"
+        :pagination="{
+          pageSize: 10,
+        }"
+        :single-line="false"
+      ></n-data-table>
+    </n-flex>
+    <n-flex v-else vertical>
+      <div>
+        <n-icon @click="backToSongs"><back-icon></back-icon></n-icon>
+        <n-icon v-if="playing" @click="handleBeatmap(false)"><stop-icon /></n-icon>
+        <n-icon v-else @click="handleBeatmap(true)"><play-icon /></n-icon>
+      </div>
+
+      <div style="margin: auto">
+        <canvas ref="canvasRef" width="1060" height="1200" style=""></canvas>
+      </div>
+    </n-flex>
+  </transition>
 </template>
 
 <script setup lang="ts">
-import { h, onMounted, ref, watch } from "vue";
-import { NDivider, NButton, NDataTable, NIcon, type DataTableColumn, type DataTableColumnGroup, NCheckboxGroup, NSpace, NCheckbox, NRadioGroup, NRadio, NFlex } from "naive-ui";
-import { genre, allSongs, showSongs, levels, type DifficultyTypes, type LevelTypes, audioElement } from "@/stores/song";
+import { Transition, h, onMounted, ref } from "vue";
+import { NButton, NDataTable, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex } from "naive-ui";
+import { allSongs, showSongs, audioElement, basicColumns, createlevelSubCloumn } from "@/stores/song";
 import type { DifficlutyType, DifficultyInfo, Song } from "@server/song";
-import { PlayCircleOutline as PlayIcon, StopCircleOutline as StopIcon } from "@vicons/ionicons5";
+import {
+  PlayCircleOutline as PlayIcon,
+  StopCircleOutline as StopIcon,
+  ArrowBackCircleOutline as BackIcon,
+} from "@vicons/ionicons5";
 import { createBeatmap } from "@/scripts/beatmap";
 import { wait } from "@/scripts/beatmap/utils";
-import { playBeatmap, playing } from "@/scripts/beatmap";
+import { watchBeatmap, playing } from "@/scripts/beatmap";
+import SongFilter from "@/components/SongFilter.vue";
 
 document.body.appendChild(audioElement);
 
 const canvasRef = ref<HTMLCanvasElement>();
-
-const genreSelect = ref(genre);
-const difficultySelect = ref<DifficultyTypes>("all");
-const levelSelect = ref<LevelTypes>(0);
 
 const currentSong = ref<Song>();
 const currentDifficulty = ref<DifficlutyType>("oni");
@@ -78,43 +70,8 @@ onMounted(() => {
   showSongs.push(...allSongs);
 });
 
-// 根据选项过滤歌曲
-watch([genreSelect, difficultySelect, levelSelect], () => {
-  const filterSongs = allSongs.filter((s) => {
-    let isMatch = false;
-
-    const dValue = difficultySelect.value;
-
-    if (dValue === "all") {
-      isMatch = levelSelect.value === 0;
-      if (!isMatch) {
-        isMatch = s.difficulties.find((d) => d.level === levelSelect.value) ? true : false;
-      }
-    } else {
-      const d = s.difficulties.find((d) => d.name === dValue);
-      if (d) isMatch = levelSelect.value === 0 || d.level === levelSelect.value;
-    }
-
-    return genreSelect.value.includes(s.genre) && isMatch;
-  });
-
-  showSongs.length = 0;
-  showSongs.push(...filterSongs);
-});
-
 const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
-  {
-    title: "曲名",
-    key: "name",
-    align: "center",
-    width: 250,
-  },
-  {
-    title: "类目",
-    key: "genre",
-    align: "center",
-    width: 150,
-  },
+  ...basicColumns,
   createDiffultyColumn("梅", "easy"),
   createDiffultyColumn("竹", "normal"),
   createDiffultyColumn("松", "hard"),
@@ -128,16 +85,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
     key,
     align: "center",
     children: [
-      {
-        title: "等级",
-        key: `${key}level`,
-        align: "center",
-        width: 80,
-        render(row, rowIndex) {
-          const d = row.difficulties.find((d) => d.name === key);
-          return d ? `${d.level}★` : "";
-        },
-      },
+      createlevelSubCloumn(key),
       {
         title: "谱面预览",
         key: `${key}preview`,
@@ -153,7 +101,6 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
                   stopMusic();
                   currentSong.value = row;
                   currentDifficulty.value = key;
-                  createBeatmap(canvasRef.value as HTMLCanvasElement, row, key);
                 },
               },
               () => "预览"
@@ -166,25 +113,40 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
   };
 }
 
+function backToSongs() {
+  currentSong.value = undefined;
+  playing.value = false;
+  audioElement.pause();
+  audioElement.currentTime = 0;
+}
+
+function onEnter() {
+  if (currentSong.value) {
+    createBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentDifficulty.value);
+  }
+}
+
 async function handleBeatmap(play: boolean) {
   if (!currentSong.value) return;
   if (play) {
     playing.value = true;
     createBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentDifficulty.value);
 
-    const difficultyInfo = currentSong.value.difficulties.find((d) => d.name === currentDifficulty.value) as DifficultyInfo;
+    const difficultyInfo = currentSong.value.difficulties.find(
+      (d) => d.name === currentDifficulty.value
+    ) as DifficultyInfo;
 
     const { offset, dir, wave } = currentSong.value;
     audioElement.src = dir + "\\" + wave;
 
     if (offset >= 0) {
-      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, difficultyInfo);
+      watchBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, difficultyInfo);
       await wait(offset * 1000);
       audioElement.play();
     } else {
       audioElement.play();
       await wait(Math.abs(offset) * 1000);
-      playBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, difficultyInfo);
+      watchBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, difficultyInfo);
     }
   } else {
     playing.value = false;

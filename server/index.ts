@@ -7,7 +7,7 @@ import { type Song, loadSongs } from "./song";
 const app = express();
 
 app.use(express.static("web"));
-app.use(express.static(".."));
+if (!process.env.NODE_ENV) app.use(express.static(".."));
 
 app.get("/api/songs", async (req: Request, res: Response, next: NextFunction) => {
   if (process.env.NODE_ENV) {

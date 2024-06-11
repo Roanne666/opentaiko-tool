@@ -1,2 +1,2 @@
 export * from "./createBeatmap";
-export * from "./playBeatmap";
+export * from "./watchBeatmap";
