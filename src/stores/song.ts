@@ -114,8 +114,3 @@ export async function fetchAllSongs() {
     genres.push(s.genre);
   }
 }
-
-/**
- * 音频节点
- */
-export const audioElement = document.createElement("audio");

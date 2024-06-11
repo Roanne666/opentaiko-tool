@@ -2,13 +2,13 @@ import type { Beatmap } from "@server/beatmap";
 import type { DifficultyInfo, Song } from "@server/song";
 import { beatWidth, marginX, marginY, rowHeight, rowSpace } from "@/scripts/beatmap/const";
 import { DrawStrokeAction } from "./drawAction";
-import { ref } from "vue";
 import { getBeatmapRows } from "./utils";
-import { audioElement } from "@/stores/song";
+import { ref } from "vue";
 
-export const playing = ref(false);
+const lastSong = ref<Song>();
 
-export async function watchBeatmap(canvas: HTMLCanvasElement, song: Song, difficultyInfo: DifficultyInfo) {
+export async function watchBeatmap(canvas: HTMLCanvasElement, audio: HTMLAudioElement, song: Song, difficultyInfo: DifficultyInfo) {
+  lastSong.value = song;
   const { beatmap } = difficultyInfo;
 
   const sourceData = canvas.toDataURL("image/jpg");
@@ -16,25 +16,18 @@ export async function watchBeatmap(canvas: HTMLCanvasElement, song: Song, diffic
   sourceImage.src = sourceData;
 
   sourceImage.onload = async () => {
-    playing.value = true;
-
     const context = canvas.getContext("2d") as CanvasRenderingContext2D;
 
     const beatmapRows = getBeatmapRows(beatmap);
 
     nextFrame(() => {
-      if (audioElement.paused) {
-        context.drawImage(sourceImage, 0, 0);
-        playing.value = false;
-        return false;
-      }
-      if (!playing.value) {
-        context.drawImage(sourceImage, 0, 0);
-        return false;
-      }
-      if (audioElement.currentTime + song.offset <= 0) return true;
+      if (lastSong.value && lastSong.value.name !== song.name) return false;
+      if (audio.paused) return true;
+      if (audio.currentTime + song.offset <= 0) return true;
 
-      const { currentX, row } = getCurrentPos(beatmap, beatmapRows, song.bpm, audioElement.currentTime + song.offset);
+      console.log(canvas.scrollTop)
+
+      const { currentX, row } = getCurrentPos(beatmap, beatmapRows, song.bpm, audio.currentTime + song.offset);
 
       context.drawImage(sourceImage, 0, 0);
       new DrawStrokeAction({
@@ -57,12 +50,7 @@ function nextFrame(callback: () => boolean) {
   });
 }
 
-function getCurrentPos(
-  beatmap: Beatmap,
-  beatmapRows: number[],
-  songBpm: number,
-  time: number
-): { currentX: number; row: number } {
+function getCurrentPos(beatmap: Beatmap, beatmapRows: number[], songBpm: number, time: number): { currentX: number; row: number } {
   let currentX = marginX;
 
   let totalBeatCount = 0;

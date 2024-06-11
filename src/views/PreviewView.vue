@@ -1,11 +1,7 @@
 <style>
-/*
-  进入和离开动画可以使用不同
-  持续时间和速度曲线。
-*/
 .slide-fade-enter-active,
 .slide-fade-leave-active {
-  transition: all 0.3s;
+  transition: all 0.25s;
 }
 
 .slide-fade-enter-from,
@@ -13,11 +9,36 @@
   transform: translateX(1080px);
   opacity: 0;
 }
+
+.back-songs {
+  position: absolute;
+  z-index: 99999;
+  top: 0px;
+}
+.back-songs:hover {
+  cursor: pointer;
+}
+
+.music-controller {
+  position: absolute;
+  bottom: 50px;
+  width: 93%;
+}
 </style>
 
 <template>
-  <transition @enter="onEnter" name="slide-fade" mode="out-in">
-    <n-flex v-if="!currentSong" vertical>
+  <n-icon v-show="isPreview" class="back-songs" @click="backToSongs" size="30"><back-icon></back-icon></n-icon>
+  <transition
+    @enter="onEnter"
+    @after-enter="
+      () => {
+        if (currentSong) isPreview = true;
+      }
+    "
+    name="slide-fade"
+    mode="out-in"
+  >
+    <n-flex v-if="!currentSong" vertical justify="center">
       <song-filter :use-score="false"></song-filter>
       <n-data-table
         :columns="columns"
@@ -29,40 +50,37 @@
       ></n-data-table>
     </n-flex>
     <n-flex v-else vertical>
-      <div>
-        <n-icon @click="backToSongs"><back-icon></back-icon></n-icon>
-        <n-icon v-if="playing" @click="handleBeatmap(false)"><stop-icon /></n-icon>
-        <n-icon v-else @click="handleBeatmap(true)"><play-icon /></n-icon>
-      </div>
-
-      <div style="margin: auto">
-        <canvas ref="canvasRef" width="1060" height="1200" style=""></canvas>
-      </div>
+      <n-scrollbar style="max-height: 88vh">
+        <n-flex justify="center">
+          <canvas ref="canvasRef" width="1080" height="1200"></canvas>
+        </n-flex>
+      </n-scrollbar>
     </n-flex>
   </transition>
+  <n-flex v-show="isPreview" class="music-controller" justify="center">
+    <audio ref="audioRef" controls style="width: 1000px"></audio>
+  </n-flex>
 </template>
 
 <script setup lang="ts">
 import { Transition, h, onMounted, ref } from "vue";
-import { NButton, NDataTable, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex } from "naive-ui";
-import { allSongs, showSongs, audioElement, basicColumns, createlevelSubCloumn } from "@/stores/song";
+import { NButton, NDataTable, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex, NScrollbar } from "naive-ui";
+import { allSongs, showSongs, basicColumns, createlevelSubCloumn } from "@/stores/song";
 import type { DifficlutyType, DifficultyInfo, Song } from "@server/song";
-import {
-  PlayCircleOutline as PlayIcon,
-  StopCircleOutline as StopIcon,
-  ArrowBackCircleOutline as BackIcon,
-} from "@vicons/ionicons5";
+import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import { createBeatmap } from "@/scripts/beatmap";
-import { wait } from "@/scripts/beatmap/utils";
-import { watchBeatmap, playing } from "@/scripts/beatmap";
+import { watchBeatmap } from "@/scripts/beatmap";
 import SongFilter from "@/components/SongFilter.vue";
 
-document.body.appendChild(audioElement);
-
 const canvasRef = ref<HTMLCanvasElement>();
+const audioRef = ref<HTMLAudioElement>();
+
+const canvasHeight = ref(1200);
 
 const currentSong = ref<Song>();
 const currentDifficulty = ref<DifficlutyType>("oni");
+
+const isPreview = ref(false);
 
 onMounted(() => {
   currentSong.value = undefined;
@@ -114,48 +132,32 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
 }
 
 function backToSongs() {
+  isPreview.value = false;
   currentSong.value = undefined;
-  playing.value = false;
-  audioElement.pause();
-  audioElement.currentTime = 0;
+  if (!audioRef.value) return;
+  audioRef.value.pause();
+  audioRef.value.currentTime = 0;
 }
 
-function onEnter() {
-  if (currentSong.value) {
-    createBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentDifficulty.value);
-  }
-}
-
-async function handleBeatmap(play: boolean) {
+// 提前绘制谱面和获取音频时长
+async function onEnter() {
   if (!currentSong.value) return;
-  if (play) {
-    playing.value = true;
-    createBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, currentDifficulty.value);
+  if (!audioRef.value) return;
+  if (!canvasRef.value) return;
+  createBeatmap(canvasRef.value, currentSong.value, currentDifficulty.value);
+  canvasHeight.value = canvasRef.value.height + 1000;
 
-    const difficultyInfo = currentSong.value.difficulties.find(
-      (d) => d.name === currentDifficulty.value
-    ) as DifficultyInfo;
+  const { dir, wave } = currentSong.value;
+  audioRef.value.src = dir + "\\" + wave;
 
-    const { offset, dir, wave } = currentSong.value;
-    audioElement.src = dir + "\\" + wave;
+  const difficultyInfo = currentSong.value.difficulties.find((d) => d.name === currentDifficulty.value) as DifficultyInfo;
 
-    if (offset >= 0) {
-      watchBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, difficultyInfo);
-      await wait(offset * 1000);
-      audioElement.play();
-    } else {
-      audioElement.play();
-      await wait(Math.abs(offset) * 1000);
-      watchBeatmap(canvasRef.value as HTMLCanvasElement, currentSong.value, difficultyInfo);
-    }
-  } else {
-    playing.value = false;
-    stopMusic();
-  }
+  watchBeatmap(canvasRef.value, audioRef.value, currentSong.value, difficultyInfo);
 }
 
 function stopMusic() {
-  audioElement.pause();
-  audioElement.currentTime = 0;
+  if (!audioRef.value) return;
+  audioRef.value.pause();
+  audioRef.value.currentTime = 0;
 }
 </script>
