@@ -3,11 +3,33 @@ import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import type { AddressInfo } from "net";
 import { type Song, loadSongs } from "./song";
+const history = require("connect-history-api-fallback");
 
 const app = express();
 
-app.use(express.static("web"));
-if (!process.env.NODE_ENV) app.use(express.static(".."));
+app.use(
+  history({
+    rewrites: [
+      {
+        from: /^\/index\/.*$/,
+        to: (context: any) => {
+          return context.parsedUrl.path;
+        },
+      },
+      {
+        from: /^\/api\/.*$/,
+        to: (context: any) => {
+          return context.parsedUrl.path;
+        },
+      },
+    ],
+  })
+);
+
+if (!process.env.NODE_ENV) {
+  app.use(express.static("web"));
+  app.use(express.static(".."));
+}
 
 app.get("/api/songs", async (req: Request, res: Response, next: NextFunction) => {
   if (process.env.NODE_ENV) {

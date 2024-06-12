@@ -5,7 +5,7 @@
 </style>
 
 <template>
-  <n-layout has-sider style="padding-top: 30px; height: 98vh">
+  <n-layout has-sider style="padding-top: 20px; height: 99vh">
     <n-layout-sider bordered width="220" content-style="padding-left: 24px;padding-right:10px"><n-menu :options="menuOptions" default-value="score" /></n-layout-sider>
     <n-layout>
       <n-layout-content content-style="padding-left: 24px;padding-right:108px;height:100vh">

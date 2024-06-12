@@ -7,7 +7,12 @@ import { ref } from "vue";
 
 const lastSong = ref<Song>();
 
-export async function watchBeatmap(canvas: HTMLCanvasElement, audio: HTMLAudioElement, song: Song, difficultyInfo: DifficultyInfo) {
+export async function watchBeatmap(
+  canvas: HTMLCanvasElement,
+  audio: HTMLAudioElement,
+  song: Song,
+  difficultyInfo: DifficultyInfo
+) {
   lastSong.value = song;
   const { beatmap } = difficultyInfo;
 
@@ -24,8 +29,6 @@ export async function watchBeatmap(canvas: HTMLCanvasElement, audio: HTMLAudioEl
       if (lastSong.value && lastSong.value.name !== song.name) return false;
       if (audio.paused) return true;
       if (audio.currentTime + song.offset <= 0) return true;
-
-      console.log(canvas.scrollTop)
 
       const { currentX, row } = getCurrentPos(beatmap, beatmapRows, song.bpm, audio.currentTime + song.offset);
 
@@ -50,7 +53,12 @@ function nextFrame(callback: () => boolean) {
   });
 }
 
-function getCurrentPos(beatmap: Beatmap, beatmapRows: number[], songBpm: number, time: number): { currentX: number; row: number } {
+function getCurrentPos(
+  beatmap: Beatmap,
+  beatmapRows: number[],
+  songBpm: number,
+  time: number
+): { currentX: number; row: number } {
   let currentX = marginX;
 
   let totalBeatCount = 0;

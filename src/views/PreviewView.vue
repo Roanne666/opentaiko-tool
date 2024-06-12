@@ -10,6 +10,17 @@
   opacity: 0;
 }
 
+.music-controller-enter-active,
+.music-controller-leave-active {
+  transition: all 0.25s;
+}
+
+.music-controller-enter-from,
+.music-controller-leave-to {
+  transform: translateY(100px);
+  opacity: 0;
+}
+
 .back-songs {
   position: absolute;
   z-index: 99999;
@@ -21,23 +32,13 @@
 
 .music-controller {
   position: absolute;
-  bottom: 50px;
+  bottom: 33px;
   width: 93%;
 }
 </style>
 
 <template>
-  <n-icon v-show="isPreview" class="back-songs" @click="backToSongs" size="30"><back-icon></back-icon></n-icon>
-  <transition
-    @enter="onEnter"
-    @after-enter="
-      () => {
-        if (currentSong) isPreview = true;
-      }
-    "
-    name="slide-fade"
-    mode="out-in"
-  >
+  <transition @enter="onEnter" name="slide-fade" mode="out-in">
     <n-flex v-if="!currentSong" vertical justify="center">
       <song-filter :use-score="false"></song-filter>
       <n-data-table
@@ -49,22 +50,39 @@
         :single-line="false"
       ></n-data-table>
     </n-flex>
-    <n-flex v-else vertical>
-      <n-scrollbar style="max-height: 88vh">
-        <n-flex justify="center">
-          <canvas ref="canvasRef" width="1080" height="1200"></canvas>
-        </n-flex>
-      </n-scrollbar>
+    <div v-else>
+      <n-icon class="back-songs" @click="backToSongs" size="30">
+        <back-icon></back-icon>
+      </n-icon>
+      <n-flex vertical>
+        <n-scrollbar style="max-height: 90vh">
+          <n-flex justify="center">
+            <canvas ref="canvasRef" width="1080" height="1200"></canvas>
+          </n-flex>
+          <n-back-top :right="100" :bottom="25"/>
+        </n-scrollbar>
+      </n-flex>
+    </div>
+  </transition>
+  <transition v-show="isPreview" name="music-controller">
+    <n-flex class="music-controller" justify="center">
+      <audio ref="audioRef" controls oncontextmenu="return false" controlslist="nodownload" style="width: 1000px"></audio>
     </n-flex>
   </transition>
-  <n-flex v-show="isPreview" class="music-controller" justify="center">
-    <audio ref="audioRef" controls style="width: 1000px"></audio>
-  </n-flex>
 </template>
 
 <script setup lang="ts">
 import { Transition, h, onMounted, ref } from "vue";
-import { NButton, NDataTable, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex, NScrollbar } from "naive-ui";
+import {
+  NButton,
+  NDataTable,
+  NIcon,
+  type DataTableColumn,
+  type DataTableColumnGroup,
+  NFlex,
+  NScrollbar,
+  NBackTop,
+} from "naive-ui";
 import { allSongs, showSongs, basicColumns, createlevelSubCloumn } from "@/stores/song";
 import type { DifficlutyType, DifficultyInfo, Song } from "@server/song";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
@@ -141,6 +159,7 @@ function backToSongs() {
 
 // 提前绘制谱面和获取音频时长
 async function onEnter() {
+  isPreview.value = currentSong.value !== undefined;
   if (!currentSong.value) return;
   if (!audioRef.value) return;
   if (!canvasRef.value) return;
@@ -150,7 +169,9 @@ async function onEnter() {
   const { dir, wave } = currentSong.value;
   audioRef.value.src = dir + "\\" + wave;
 
-  const difficultyInfo = currentSong.value.difficulties.find((d) => d.name === currentDifficulty.value) as DifficultyInfo;
+  const difficultyInfo = currentSong.value.difficulties.find(
+    (d) => d.name === currentDifficulty.value
+  ) as DifficultyInfo;
 
   watchBeatmap(canvasRef.value, audioRef.value, currentSong.value, difficultyInfo);
 }
