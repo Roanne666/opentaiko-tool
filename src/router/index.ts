@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import ScoreView from "@/views/ScoreView.vue";
 import HomeView from "@/views/HomeView.vue";
 import PreviewView from "@/views/PreviewView.vue";
+import EditView from "@/views/EditView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,6 +21,11 @@ const router = createRouter({
       path: "/preview",
       name: "preview",
       component: PreviewView,
+    },
+    {
+      path: "/edit",
+      name: "edit",
+      component: EditView,
     },
   ],
 });
