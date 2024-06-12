@@ -87,7 +87,7 @@ import { allSongs, showSongs, basicColumns, createlevelSubCloumn } from "@/store
 import type { DifficlutyType, DifficultyInfo, Song } from "@server/song";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import { createBeatmap } from "@/scripts/beatmap";
-import { watchBeatmap } from "@/scripts/beatmap";
+import { previewBeatmap } from "@/scripts/beatmap";
 import SongFilter from "@/components/SongFilter.vue";
 
 const canvasRef = ref<HTMLCanvasElement>();
@@ -173,7 +173,7 @@ async function onEnter() {
     (d) => d.name === currentDifficulty.value
   ) as DifficultyInfo;
 
-  watchBeatmap(canvasRef.value, audioRef.value, currentSong.value, difficultyInfo);
+  previewBeatmap(canvasRef.value, audioRef.value, currentSong.value, difficultyInfo);
 }
 
 function stopMusic() {

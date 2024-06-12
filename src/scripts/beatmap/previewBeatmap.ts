@@ -7,12 +7,7 @@ import { ref } from "vue";
 
 const lastSong = ref<Song>();
 
-export async function watchBeatmap(
-  canvas: HTMLCanvasElement,
-  audio: HTMLAudioElement,
-  song: Song,
-  difficultyInfo: DifficultyInfo
-) {
+export async function previewBeatmap(canvas: HTMLCanvasElement, audio: HTMLAudioElement, song: Song, difficultyInfo: DifficultyInfo) {
   lastSong.value = song;
   const { beatmap } = difficultyInfo;
 
@@ -53,12 +48,7 @@ function nextFrame(callback: () => boolean) {
   });
 }
 
-function getCurrentPos(
-  beatmap: Beatmap,
-  beatmapRows: number[],
-  songBpm: number,
-  time: number
-): { currentX: number; row: number } {
+function getCurrentPos(beatmap: Beatmap, beatmapRows: number[], songBpm: number, time: number): { currentX: number; row: number } {
   let currentX = marginX;
 
   let totalBeatCount = 0;
@@ -73,23 +63,32 @@ function getCurrentPos(
   let speed = 1;
 
   while (time > 0) {
-    const change = beatmap.changes[totalBeatCount];
-    if (change?.bpm) bps = change.bpm / 60;
-    if (change?.measure) speed = change.measure[1] / 4;
+    const beat = beatmap.beats[totalBeatCount];
+    for (let i = 0; i < beat.length; i++) {
+      const subCount = i / beat.length;
+      const change = beatmap.changes[totalBeatCount + subCount];
+      if (change?.bpm) bps = change.bpm / 60;
+      if (change?.measure) speed = change.measure[1] / 4;
 
-    const beatTime = 1 / bps / speed;
-    if (time > beatTime) {
-      time -= beatTime;
-      rowBeatCount += 1;
-      if (rowBeatCount >= beatmapRows[row]) {
-        rowBeatCount = 0;
-        row += 1;
+      const subBeatTime = 1 / beat.length / bps / speed;
+      if (time > subBeatTime) {
+        time -= subBeatTime;
+      } else {
+        const restCount = time * bps * speed;
+        const finalCount = subCount + restCount;
+        currentX = marginX + (rowBeatCount + finalCount) * beatWidth;
+        time = 0;
+        break;
       }
-      totalBeatCount += 1;
-    } else {
-      rowBeatCount += bps * time * speed;
-      currentX = marginX + rowBeatCount * beatWidth;
-      break;
+
+      if (i === beat.length - 1) {
+        rowBeatCount += 1;
+        if (rowBeatCount >= beatmapRows[row]) {
+          rowBeatCount = 0;
+          row += 1;
+        }
+        totalBeatCount += 1;
+      }
     }
   }
 

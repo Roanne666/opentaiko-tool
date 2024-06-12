@@ -26,12 +26,9 @@ export function parseBeatmap(lines: string[], start: number) {
 
   // 数据变化
   let lastMeasure: Measure = [4, 4];
-  let lastHs = -1;
-  let lastBpm = -1;
-  let lastDelay = 0;
 
   let currentBar: number[] = [];
-  let noteCount = 0;
+  let barDivision: { noteCount: number; change: Change }[] = [];
 
   for (let i = start; i < lines.length; i++) {
     const line = lines[i].toLowerCase().trim();
@@ -44,22 +41,22 @@ export function parseBeatmap(lines: string[], start: number) {
         setChange(beatmap.changes, totalBeatCount, "measure", lastMeasure);
       } else if (line.includes("#scroll")) {
         const hs = Number(line.split(" ")[1]);
-        if (noteCount > 0) {
-          lastHs = hs;
+        if (barDivision.length > 0) {
+          barDivision[barDivision.length - 1].change.hs = hs;
         } else {
           setChange(beatmap.changes, totalBeatCount, "hs", hs);
         }
       } else if (line.includes("#bpmchange")) {
         const bpm = Number(line.split(" ")[1]);
-        if (noteCount > 0) {
-          lastBpm = bpm;
+        if (barDivision.length > 0) {
+          barDivision[barDivision.length - 1].change.bpm = bpm;
         } else {
           setChange(beatmap.changes, totalBeatCount, "bpm", bpm);
         }
       } else if (line.includes("#delay")) {
         const delay = Number(line.split(" ")[1]);
-        if (noteCount > 0) {
-          lastDelay = delay;
+        if (barDivision.length > 0) {
+          barDivision[barDivision.length - 1].change.delay = delay;
         } else {
           setChange(beatmap.changes, totalBeatCount, "delay", delay);
         }
@@ -76,19 +73,13 @@ export function parseBeatmap(lines: string[], start: number) {
       );
 
       // 在小节中间改变数据
-      if (noteCount > 0) {
-        const changeIndex = totalBeatCount + (noteCount / currentBar.length) * lastMeasure[0];
-        if (lastHs > 0) {
-          setChange(beatmap.changes, changeIndex, "hs", lastHs);
-          lastHs = -1;
-        }
-        if (lastBpm > 0) {
-          setChange(beatmap.changes, changeIndex, "bpm", lastBpm);
-          lastBpm = -1;
-        }
-        if (lastDelay !== 0) {
-          setChange(beatmap.changes, changeIndex, "delay", lastDelay);
-          lastDelay = 0;
+      if (barDivision.length > 0) {
+        for (const d of barDivision) {
+          const change = d.change;
+          const changeIndex = totalBeatCount + (d.noteCount / currentBar.length) * lastMeasure[0];
+          if (change.hs) setChange(beatmap.changes, changeIndex, "hs", change.hs);
+          if (change.bpm) setChange(beatmap.changes, changeIndex, "bpm", change.bpm);
+          if (change.delay) setChange(beatmap.changes, changeIndex, "delay", change.delay);
         }
       }
 
@@ -96,7 +87,7 @@ export function parseBeatmap(lines: string[], start: number) {
       beatmap.beats.push(...beats);
 
       currentBar = [];
-      noteCount = 0;
+      barDivision = [];
 
       totalBeatCount += lastMeasure[0];
     } else if (line.length > 0) {
@@ -106,7 +97,7 @@ export function parseBeatmap(lines: string[], start: number) {
           .split("")
           .map((s) => Number(s))
       );
-      noteCount = currentBar.length;
+      barDivision.push({ noteCount: currentBar.length, change: {} });
     }
   }
 

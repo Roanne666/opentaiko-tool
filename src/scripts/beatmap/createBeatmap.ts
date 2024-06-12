@@ -10,7 +10,7 @@ import { getBeatmapRows } from "./utils";
 import type { Measure } from "@server/beatmap";
 import { getBeatActions, type BeatPos } from "./beat";
 
-export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty: DifficlutyType) {
+export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty: DifficlutyType, ignoreHs = false) {
   const context = canvas.getContext("2d") as CanvasRenderingContext2D;
   const difficultyInfo = song.difficulties.find((d) => d.name === difficulty);
   if (!difficultyInfo) return;
@@ -74,14 +74,6 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
     }
 
     totalBeatCount += 1;
-    const change = beatmap.changes[totalBeatCount];
-
-    if (change?.bpm !== undefined) bpm = change.bpm;
-    if (change?.hs !== undefined) hs = change.hs;
-    if (change?.barline !== undefined) barline = change.barline;
-    if (change?.gogotime !== undefined) gogotime = change.gogotime;
-    if (change?.delay !== undefined) delay = change.delay;
-    if (change?.measure !== undefined) measure = change.measure;
 
     // 绘制新行
     if (newRow) {
@@ -91,17 +83,6 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
 
     // 绘制节拍
     beatActions.push(...getBeatActions(currentRow, rowBeatCount, beatPos, { gogotime }));
-
-    // 根据bpm和scroll变化绘制标记
-    if (i === 0) {
-      if (hs === 1) {
-        markActions.push(...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount, { bpm }));
-      } else {
-        markActions.push(...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount, { bpm, hs }));
-      }
-    } else {
-      markActions.push(...getMarkActions(currentBar + 1, barBeatCount, currentRow, rowBeatCount, change));
-    }
 
     const notes = beatmap.beats[i];
 
@@ -121,6 +102,37 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
 
     // 绘制音符
     for (let j = 0; j < notes.length; j++) {
+      const subBeatCount = j / notes.length;
+      const change = beatmap.changes[totalBeatCount + subBeatCount];
+      if (change) {
+        if (change.measure !== undefined) measure = change.measure as Measure;
+        if (change.bpm !== undefined) bpm = change.bpm as number;
+        if (change.hs !== undefined) hs = change.hs as number;
+        if (change.delay !== undefined) delay = change.delay as number;
+        if (change.barline !== undefined) barline = change.barline as boolean;
+        if (change.gogotime !== undefined) gogotime = change.gogotime as boolean;
+
+        // 根据bpm和scroll变化绘制标记
+        if (ignoreHs) {
+          if (i === 0) {
+            markActions.push(...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount + subBeatCount, { bpm }));
+          } else {
+            change.hs = undefined;
+            markActions.push(...getMarkActions(currentBar + 1, barBeatCount, currentRow, rowBeatCount + subBeatCount, change));
+          }
+        } else {
+          if (i === 0) {
+            if (hs === 1) {
+              markActions.push(...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount + subBeatCount, { bpm }));
+            } else {
+              markActions.push(...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount + subBeatCount, { bpm, hs }));
+            }
+          } else {
+            markActions.push(...getMarkActions(currentBar + 1, barBeatCount, currentRow, rowBeatCount + subBeatCount, change));
+          }
+        }
+      }
+
       const note = notes[j];
       const noteX = marginX + rowBeatCount * beatWidth + j * noteInterval;
       const noteY = marginY + currentRow * (rowHeight + rowSpace) + rowHeight / 2;
