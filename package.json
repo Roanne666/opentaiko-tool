@@ -1,6 +1,6 @@
 {
   "name": "opentaiko-tool",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "bin": "./server_dist/index.js",
   "pkg": {
