@@ -38,11 +38,32 @@
       </n-space>
     </n-radio-group>
   </div>
+
+  <n-data-table
+    :columns="props.columns"
+    :data="showSongs"
+    :pagination="{
+      pageSize: 10,
+    }"
+    :single-line="false"
+    style="padding-right: 30px;"
+  >
+    <template #empty><span style="user-select: none; color: gray"> 没有乐曲了咚~ </span></template>
+  </n-data-table>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
-import { NCheckboxGroup, NSpace, NCheckbox, NRadioGroup, NRadio } from "naive-ui";
+import { onMounted, ref, watch } from "vue";
+import {
+  NCheckboxGroup,
+  NSpace,
+  NCheckbox,
+  NRadioGroup,
+  NRadio,
+  NDataTable,
+  type DataTableColumn,
+  type DataTableColumnGroup,
+} from "naive-ui";
 import {
   allSongs,
   genres,
@@ -53,15 +74,22 @@ import {
   type LevelTypes,
   type ScoreTypes,
 } from "@/stores/song";
+import type { Song } from "@server/song";
 
 const props = defineProps<{
   useScore: boolean;
+  columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[];
 }>();
 
 const genreSelect = ref(genres);
 const difficultySelect = ref<DifficultyTypes>("all");
 const levelSelect = ref<LevelTypes>(0);
 const scoreSelcet = ref<ScoreTypes>("全部");
+
+onMounted(() => {
+  showSongs.length = 0;
+  showSongs.push(...allSongs);
+});
 
 watch([genreSelect, difficultySelect, levelSelect, scoreSelcet], () => {
   const filterSongs = allSongs.filter((s) => {
@@ -97,7 +125,7 @@ watch([genreSelect, difficultySelect, levelSelect, scoreSelcet], () => {
       }
     }
 
-    return genres.includes(s.genre) && isMatch;
+    return genreSelect.value.includes(s.genre) && isMatch;
   });
 
   showSongs.length = 0;

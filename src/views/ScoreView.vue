@@ -1,31 +1,16 @@
 <style scoped></style>
 
 <template>
-  <n-flex vertical>
-    <song-filter :use-score="true"></song-filter>
-
-    <n-data-table
-      :columns="columns"
-      :data="showSongs"
-      :pagination="{
-        pageSize: 10,
-      }"
-      :single-line="false"
-    ></n-data-table>
+  <n-flex vertical justify="center">
+    <song-table :use-score="true" :columns="columns"></song-table>
   </n-flex>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
-import { NDataTable, type DataTableColumn, type DataTableColumnGroup, NFlex } from "naive-ui";
-import { allSongs, basicColumns, createlevelSubCloumn, showSongs } from "@/stores/song";
+import { type DataTableColumn, type DataTableColumnGroup, NFlex } from "naive-ui";
+import { basicColumns, createlevelSubCloumn } from "@/stores/song";
 import type { DifficlutyType, Song } from "@server/song";
-import SongFilter from "@/components/SongFilter.vue";
-
-onMounted(() => {
-  showSongs.length = 0;
-  showSongs.push(...allSongs);
-});
+import SongTable from "@/components/SongTable.vue";
 
 const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
   ...basicColumns,

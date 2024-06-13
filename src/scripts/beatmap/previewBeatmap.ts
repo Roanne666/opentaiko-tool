@@ -7,7 +7,12 @@ import { ref } from "vue";
 
 const lastSong = ref<Song>();
 
-export async function previewBeatmap(canvas: HTMLCanvasElement, audio: HTMLAudioElement, song: Song, difficultyInfo: DifficultyInfo) {
+export async function previewBeatmap(
+  canvas: HTMLCanvasElement,
+  audio: HTMLAudioElement,
+  song: Song,
+  difficultyInfo: DifficultyInfo
+) {
   lastSong.value = song;
   const { beatmap } = difficultyInfo;
 
@@ -48,7 +53,12 @@ function nextFrame(callback: () => boolean) {
   });
 }
 
-function getCurrentPos(beatmap: Beatmap, beatmapRows: number[], songBpm: number, time: number): { currentX: number; row: number } {
+function getCurrentPos(
+  beatmap: Beatmap,
+  beatmapRows: number[],
+  songBpm: number,
+  time: number
+): { currentX: number; row: number } {
   let currentX = marginX;
 
   let totalBeatCount = 0;

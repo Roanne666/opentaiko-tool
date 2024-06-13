@@ -1,4 +1,4 @@
-<style>
+<style scoped>
 .slide-fade-enter-active,
 .slide-fade-leave-active {
   transition: all 0.25s;
@@ -29,66 +29,50 @@
 .back-songs:hover {
   cursor: pointer;
 }
-
-.music-controller {
-  position: absolute;
-  bottom: 33px;
-  width: 93%;
-}
 </style>
 
 <template>
   <transition @enter="onEnter" name="slide-fade" mode="out-in">
     <n-flex v-if="!currentSong" vertical justify="center">
-      <song-filter :use-score="false"></song-filter>
-      <n-data-table
-        :columns="columns"
-        :data="showSongs"
-        :pagination="{
-          pageSize: 10,
-        }"
-        :single-line="false"
-      ></n-data-table>
+      <song-table :use-score="false" :columns="columns"></song-table>
     </n-flex>
-    <div v-else>
-      <n-icon class="back-songs" @click="backToSongs" size="30">
-        <back-icon></back-icon>
-      </n-icon>
-      <n-flex vertical>
-        <n-scrollbar style="max-height: 90vh">
-          <n-flex justify="center">
-            <canvas ref="canvasRef" width="1080" height="1200"></canvas>
-          </n-flex>
-          <n-back-top :right="100" :bottom="25"/>
-        </n-scrollbar>
-      </n-flex>
-    </div>
+
+    <n-flex v-else vertical>
+      <n-scrollbar style="max-height: 90vh">
+        <n-flex justify="center">
+          <canvas ref="canvasRef" width="1080" height="1200"></canvas>
+        </n-flex>
+        <n-back-top :right="100" :bottom="20" />
+      </n-scrollbar>
+    </n-flex>
   </transition>
+
+  <transition v-show="isPreview" name="slide-fade">
+    <n-icon class="back-songs" @click="backToSongs" size="30">
+      <back-icon></back-icon>
+    </n-icon>
+  </transition>
+
   <transition v-show="isPreview" name="music-controller">
-    <n-flex class="music-controller" justify="center">
-      <audio ref="audioRef" controls oncontextmenu="return false" controlslist="nodownload" style="width: 1000px"></audio>
-    </n-flex>
+    <audio
+      ref="audioRef"
+      controls
+      oncontextmenu="return false"
+      controlslist="nodownload"
+      style="position: absolute; width: 1000px; left: 21%; bottom: 30px"
+    ></audio>
   </transition>
 </template>
 
 <script setup lang="ts">
-import { Transition, h, onMounted, ref } from "vue";
-import {
-  NButton,
-  NDataTable,
-  NIcon,
-  type DataTableColumn,
-  type DataTableColumnGroup,
-  NFlex,
-  NScrollbar,
-  NBackTop,
-} from "naive-ui";
-import { allSongs, showSongs, basicColumns, createlevelSubCloumn } from "@/stores/song";
+import { Transition, h, ref } from "vue";
+import { NButton, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex, NScrollbar, NBackTop } from "naive-ui";
+import { basicColumns, createlevelSubCloumn } from "@/stores/song";
 import type { DifficlutyType, DifficultyInfo, Song } from "@server/song";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import { createBeatmap } from "@/scripts/beatmap";
 import { previewBeatmap } from "@/scripts/beatmap";
-import SongFilter from "@/components/SongFilter.vue";
+import SongTable from "@/components/SongTable.vue";
 
 const canvasRef = ref<HTMLCanvasElement>();
 const audioRef = ref<HTMLAudioElement>();
@@ -99,12 +83,6 @@ const currentSong = ref<Song>();
 const currentDifficulty = ref<DifficlutyType>("oni");
 
 const isPreview = ref(false);
-
-onMounted(() => {
-  currentSong.value = undefined;
-  showSongs.length = 0;
-  showSongs.push(...allSongs);
-});
 
 const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
   ...basicColumns,
@@ -134,7 +112,6 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
               NButton,
               {
                 onClick() {
-                  stopMusic();
                   currentSong.value = row;
                   currentDifficulty.value = key;
                 },
@@ -174,11 +151,5 @@ async function onEnter() {
   ) as DifficultyInfo;
 
   previewBeatmap(canvasRef.value, audioRef.value, currentSong.value, difficultyInfo);
-}
-
-function stopMusic() {
-  if (!audioRef.value) return;
-  audioRef.value.pause();
-  audioRef.value.currentTime = 0;
 }
 </script>
