@@ -75,6 +75,16 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
 
     totalBeatCount += 1;
 
+    const change = beatmap.changes[totalBeatCount];
+    if (change) {
+      if (change.measure !== undefined) measure = change.measure;
+      if (change.bpm !== undefined) bpm = change.bpm;
+      if (change.hs !== undefined) hs = change.hs;
+      if (change.delay !== undefined) delay = change.delay;
+      if (change.barline !== undefined) barline = change.barline;
+      if (change.gogotime !== undefined) gogotime = change.gogotime;
+    }
+
     // 绘制新行
     if (newRow) {
       drawRow(context, currentRow, canvas.width);
@@ -103,22 +113,23 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
     // 绘制音符
     for (let j = 0; j < notes.length; j++) {
       const subBeatCount = j / notes.length;
-      const change = beatmap.changes[totalBeatCount + subBeatCount];
-      if (change) {
-        if (change.measure !== undefined) measure = change.measure as Measure;
-        if (change.bpm !== undefined) bpm = change.bpm as number;
-        if (change.hs !== undefined) hs = change.hs as number;
-        if (change.delay !== undefined) delay = change.delay as number;
-        if (change.barline !== undefined) barline = change.barline as boolean;
-        if (change.gogotime !== undefined) gogotime = change.gogotime as boolean;
+      const currentBeatCount = totalBeatCount + subBeatCount;
+      const subChange = beatmap.changes[currentBeatCount];
+      if (subChange) {
+        if (subChange.measure !== undefined) measure = subChange.measure;
+        if (subChange.bpm !== undefined) bpm = subChange.bpm;
+        if (subChange.hs !== undefined) hs = subChange.hs;
+        if (subChange.delay !== undefined) delay = subChange.delay;
+        if (subChange.barline !== undefined) barline = subChange.barline;
+        if (subChange.gogotime !== undefined) gogotime = subChange.gogotime;
 
         // 根据bpm和scroll变化绘制标记
         if (ignoreHs) {
           if (i === 0) {
             markActions.push(...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount + subBeatCount, { bpm }));
           } else {
-            change.hs = undefined;
-            markActions.push(...getMarkActions(currentBar + 1, barBeatCount, currentRow, rowBeatCount + subBeatCount, change));
+            subChange.hs = undefined;
+            markActions.push(...getMarkActions(currentBar + 1, barBeatCount, currentRow, rowBeatCount + subBeatCount, subChange));
           }
         } else {
           if (i === 0) {
@@ -128,7 +139,7 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
               markActions.push(...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount + subBeatCount, { bpm, hs }));
             }
           } else {
-            markActions.push(...getMarkActions(currentBar + 1, barBeatCount, currentRow, rowBeatCount + subBeatCount, change));
+            markActions.push(...getMarkActions(currentBar + 1, barBeatCount, currentRow, rowBeatCount + subBeatCount, subChange));
           }
         }
       }

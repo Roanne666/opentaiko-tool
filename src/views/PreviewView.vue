@@ -26,6 +26,7 @@
   z-index: 99999;
   top: 0px;
 }
+
 .back-songs:hover {
   cursor: pointer;
 }
@@ -37,7 +38,7 @@
       <song-table :use-score="false" :columns="columns"></song-table>
     </n-flex>
 
-    <n-flex v-else vertical>
+    <n-flex v-else justify="center">
       <n-scrollbar style="max-height: 90vh">
         <n-flex justify="center">
           <canvas ref="canvasRef" width="1080" height="1200"></canvas>
@@ -54,13 +55,7 @@
   </transition>
 
   <transition v-show="isPreview" name="music-controller">
-    <audio
-      ref="audioRef"
-      controls
-      oncontextmenu="return false"
-      controlslist="nodownload"
-      style="position: absolute; width: 1000px; left: 21%; bottom: 30px"
-    ></audio>
+    <audio ref="audioRef" controls oncontextmenu="return false" controlslist="nodownload" style="position: absolute; width: 1000px; left: 21.5vw; bottom: 30px"></audio>
   </transition>
 </template>
 
@@ -146,9 +141,7 @@ async function onEnter() {
   const { dir, wave } = currentSong.value;
   audioRef.value.src = dir + "\\" + wave;
 
-  const difficultyInfo = currentSong.value.difficulties.find(
-    (d) => d.name === currentDifficulty.value
-  ) as DifficultyInfo;
+  const difficultyInfo = currentSong.value.difficulties.find((d) => d.name === currentDifficulty.value) as DifficultyInfo;
 
   previewBeatmap(canvasRef.value, audioRef.value, currentSong.value, difficultyInfo);
 }
