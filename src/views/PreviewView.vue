@@ -10,17 +10,6 @@
   opacity: 0;
 }
 
-.music-controller-enter-active,
-.music-controller-leave-active {
-  transition: all 0.25s;
-}
-
-.music-controller-enter-from,
-.music-controller-leave-to {
-  transform: translateY(100px);
-  opacity: 0;
-}
-
 .back-songs {
   position: absolute;
   z-index: 99999;
@@ -33,18 +22,23 @@
 </style>
 
 <template>
-  <transition @enter="onEnter" name="slide-fade" mode="out-in">
-    <n-flex v-if="!currentSong" vertical justify="center">
+  <transition v-show="!currentSong" @after-leave="enterPreview" name="slide-fade">
+    <n-flex vertical justify="center">
       <song-table :use-score="false" :columns="columns"></song-table>
     </n-flex>
+  </transition>
 
-    <n-flex v-else justify="center">
+  <transition v-show="isPreview" name="slide-fade">
+    <n-flex vertical justify="center">
       <n-scrollbar style="max-height: 90vh">
         <n-flex justify="center">
           <canvas ref="canvasRef" width="1080" height="1200"></canvas>
         </n-flex>
         <n-back-top :right="100" :bottom="20" />
       </n-scrollbar>
+      <n-flex justify="center">
+        <audio ref="audioRef" controls oncontextmenu="return false" controlslist="nodownload" style="width: 1000px" />
+      </n-flex>
     </n-flex>
   </transition>
 
@@ -53,21 +47,17 @@
       <back-icon></back-icon>
     </n-icon>
   </transition>
-
-  <transition v-show="isPreview" name="music-controller">
-    <audio ref="audioRef" controls oncontextmenu="return false" controlslist="nodownload" style="position: absolute; width: 1000px; left: 21.5vw; bottom: 30px"></audio>
-  </transition>
 </template>
 
 <script setup lang="ts">
 import { Transition, h, ref } from "vue";
 import { NButton, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex, NScrollbar, NBackTop } from "naive-ui";
 import { basicColumns, createlevelSubCloumn } from "@/stores/song";
-import type { DifficlutyType, DifficultyInfo, Song } from "@server/song";
+import type { DifficlutyType, Song } from "@server/song";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import { createBeatmap } from "@/scripts/beatmap";
-import { previewBeatmap } from "@/scripts/beatmap";
 import SongTable from "@/components/SongTable.vue";
+import { BeatmapViewer } from "@/scripts/beatmap/viewer";
 
 const canvasRef = ref<HTMLCanvasElement>();
 const audioRef = ref<HTMLAudioElement>();
@@ -77,6 +67,7 @@ const canvasHeight = ref(1200);
 const currentSong = ref<Song>();
 const currentDifficulty = ref<DifficlutyType>("oni");
 
+let beatmapViewer: BeatmapViewer | undefined;
 const isPreview = ref(false);
 
 const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
@@ -109,6 +100,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
                 onClick() {
                   currentSong.value = row;
                   currentDifficulty.value = key;
+                  enterPreview();
                 },
               },
               () => "预览"
@@ -121,8 +113,9 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
   };
 }
 
-function backToSongs() {
+async function backToSongs() {
   isPreview.value = false;
+  await new Promise((resolve) => setTimeout(() => resolve(true), 250));
   currentSong.value = undefined;
   if (!audioRef.value) return;
   audioRef.value.pause();
@@ -130,19 +123,19 @@ function backToSongs() {
 }
 
 // 提前绘制谱面和获取音频时长
-async function onEnter() {
-  isPreview.value = currentSong.value !== undefined;
+async function enterPreview() {
+  await new Promise((resolve) => setTimeout(() => resolve(true), 250));
+  isPreview.value = true;
   if (!currentSong.value) return;
   if (!audioRef.value) return;
   if (!canvasRef.value) return;
-  createBeatmap(canvasRef.value, currentSong.value, currentDifficulty.value);
+  const { beatmap, imageData } = createBeatmap(canvasRef.value, currentSong.value, currentDifficulty.value);
   canvasHeight.value = canvasRef.value.height + 1000;
 
   const { dir, wave } = currentSong.value;
   audioRef.value.src = dir + "\\" + wave;
 
-  const difficultyInfo = currentSong.value.difficulties.find((d) => d.name === currentDifficulty.value) as DifficultyInfo;
-
-  previewBeatmap(canvasRef.value, audioRef.value, currentSong.value, difficultyInfo);
+  if (!beatmapViewer) beatmapViewer = new BeatmapViewer(canvasRef.value, audioRef.value);
+  beatmapViewer.init(beatmap, imageData, currentSong.value);
 }
 </script>

@@ -1,6 +1,5 @@
 import { readdirSync, readFileSync } from "fs";
-import { join, resolve } from "path";
-import { type Beatmap, parseBeatmap } from "./beatmap";
+import { join } from "path";
 import { isDir } from "./utils";
 import iconv from "iconv-lite";
 
@@ -13,7 +12,7 @@ export type DifficultyInfo = {
   scoreInit: number;
   scoreDiff: number;
   balloon: number[];
-  beatmap: Beatmap;
+  sourceData: string[];
 };
 
 export type Song = {
@@ -70,7 +69,9 @@ async function parseSongs(path: string, exclude: string[], use1P = true) {
           songs.push(song);
 
           if (!songFiles.find((s) => (use1P ? s.includes("tja1P.score") : s.includes("tja2P.score")))) continue;
-          const scorePath = use1P ? join(songDirPath, songName + ".tja1P.score.ini") : join(songDirPath, songName + ".tja2P.score.ini");
+          const scorePath = use1P
+            ? join(songDirPath, songName + ".tja1P.score.ini")
+            : join(songDirPath, songName + ".tja2P.score.ini");
           const scores = parseScores(scorePath);
 
           for (const key in scores) {
@@ -113,6 +114,7 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
   // 当前难度信息
   let dInfo: DifficultyInfo | undefined = undefined;
 
+  let start = 0;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].toLowerCase().trim();
 
@@ -153,11 +155,8 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
     if (line.includes("scoreinit:") && dInfo) dInfo.scoreInit = Number(line.split(":")[1]);
     if (line.includes("scorediff:") && dInfo) dInfo.scoreDiff = Number(line.split(":")[1]);
 
-    if (line.includes("#start") && dInfo) {
-      const { end, beatmap } = parseBeatmap(lines, i);
-      dInfo.beatmap = beatmap;
-      i = end;
-    }
+    if (line.includes("#start") && dInfo) start = i;
+    if (line.includes("#end") && dInfo) dInfo.sourceData = lines.slice(start, i + 1);
   }
 
   return song;
@@ -171,10 +170,7 @@ function createNewDifficultyInfo(difficulty: "easy" | "normal" | "hard" | "oni" 
     scoreInit: 0,
     scoreDiff: 0,
     balloon: [],
-    beatmap: {
-      changes: {},
-      beats: [],
-    },
+    sourceData: [],
   };
 }
 

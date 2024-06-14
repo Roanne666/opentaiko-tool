@@ -1,6 +1,6 @@
-import type { Change } from "@server/beatmap";
 import { marginX, beatWidth, marginY, rowHeight, rowSpace, gogotimeBgColor, drakLineColor, lightLineColor } from "./const";
 import { DrawRectAction, DrawStrokeAction, type DrawAction } from "./drawAction";
+import type { Change } from "./types";
 
 export type BeatPos = "start" | "middle" | "end";
 

@@ -1,21 +1,41 @@
-import type { Song, DifficlutyType } from "@server/song";
+import type { Song, DifficlutyType, DifficultyInfo } from "@server/song";
 import { drawBackground } from "./background";
-import { marginX, beatWidth, beatPerRow, marginY, rowHeight, rowSpace, balloonColor, yellowColor, bigNoteSize, smallNoteSize, donColor, kaColor, markFont } from "./const";
+import {
+  marginX,
+  beatWidth,
+  beatPerRow,
+  marginY,
+  rowHeight,
+  rowSpace,
+  balloonColor,
+  yellowColor,
+  bigNoteSize,
+  smallNoteSize,
+  donColor,
+  kaColor,
+  markFont,
+} from "./const";
 import { DrawAction, DrawTextAction } from "./drawAction";
 import { getLongActions } from "./long";
 import { getMarkActions } from "./mark";
 import { getNoteAction } from "./note";
 import { drawRow } from "./row";
 import { getBeatmapRows } from "./utils";
-import type { Measure } from "@server/beatmap";
 import { getBeatActions, type BeatPos } from "./beat";
+import { parseBeatmap } from "./parser";
+import type { Beatmap, ImageData, Measure } from "./types";
 
-export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty: DifficlutyType, ignoreHs = false) {
+export function createBeatmap(
+  canvas: HTMLCanvasElement,
+  song: Song,
+  difficulty: DifficlutyType,
+  ignoreHs = false
+): { beatmap: Beatmap; imageData: ImageData } {
   const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-  const difficultyInfo = song.difficulties.find((d) => d.name === difficulty);
-  if (!difficultyInfo) return;
+  const difficultyInfo = song.difficulties.find((d) => d.name === difficulty) as DifficultyInfo;
 
-  const { beatmap, balloon } = difficultyInfo;
+  const beatmap = parseBeatmap(difficultyInfo.sourceData);
+  const { balloon } = difficultyInfo;
   const beatmapRows = getBeatmapRows(beatmap);
 
   // 调整canvas大小并绘制背景
@@ -129,17 +149,23 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
             markActions.push(...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount + subBeatCount, { bpm }));
           } else {
             subChange.hs = undefined;
-            markActions.push(...getMarkActions(currentBar + 1, barBeatCount, currentRow, rowBeatCount + subBeatCount, subChange));
+            markActions.push(
+              ...getMarkActions(currentBar + 1, barBeatCount, currentRow, rowBeatCount + subBeatCount, subChange)
+            );
           }
         } else {
           if (i === 0) {
             if (hs === 1) {
               markActions.push(...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount + subBeatCount, { bpm }));
             } else {
-              markActions.push(...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount + subBeatCount, { bpm, hs }));
+              markActions.push(
+                ...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount + subBeatCount, { bpm, hs })
+              );
             }
           } else {
-            markActions.push(...getMarkActions(currentBar + 1, barBeatCount, currentRow, rowBeatCount + subBeatCount, subChange));
+            markActions.push(
+              ...getMarkActions(currentBar + 1, barBeatCount, currentRow, rowBeatCount + subBeatCount, subChange)
+            );
           }
         }
       }
@@ -221,7 +247,14 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
         if (currentLong !== "") {
           let color = currentLong === "balloon" ? balloonColor : yellowColor;
           let radius = currentLong === "big" ? bigNoteSize : smallNoteSize;
-          const longActions = getLongActions({ x: noteX, y: noteY, color, radius, drawType: "end", interval: noteInterval });
+          const longActions = getLongActions({
+            x: noteX,
+            y: noteY,
+            color,
+            radius,
+            drawType: "end",
+            interval: noteInterval,
+          });
           noteActions.push(...longActions);
         }
         currentLong = "";
@@ -233,4 +266,6 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
   beatActions.forEach((a) => a.draw(context));
   noteActions.forEach((a) => a.draw(context));
   markActions.forEach((a) => a.draw(context));
+
+  return { beatmap, imageData: { uid: Math.floor(Math.random() * 100000), data: canvas.toDataURL("image/jpg") } };
 }
