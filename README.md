@@ -1,7 +1,7 @@
 # opentaiko-tool
 
-opentaiko工具，用于读取成绩和谱面等。
-dev时将Songs文件夹拖入到本项目根目录即可读取，打包后则将exe拖入opentaiko根目录使用。
+opentaiko工具，包含读取成绩、读取谱面和编辑谱面等功能。
+开发时将Songs文件夹拖入到本项目根目录即可读取，打包后则将bundle文件夹拖入opentaiko根目录使用。
 
 ## 安装依赖库
 
