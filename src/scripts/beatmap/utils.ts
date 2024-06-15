@@ -1,8 +1,4 @@
-import type { Beatmap, Measure } from "@server/beatmap";
-
-export async function wait(time: number) {
-  await new Promise((resolve) => setTimeout(() => resolve(true), time));
-}
+import type { Beatmap, Measure } from "./types";
 
 /**
  * 解析获取每一行的节拍数
@@ -71,5 +67,3 @@ export function getBeatmapRows(beatmap: Beatmap) {
 
   return rows;
 }
-
-export function calBarPos() {}

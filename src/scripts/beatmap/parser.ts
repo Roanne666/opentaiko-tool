@@ -1,22 +1,6 @@
-export type Measure = [number, number];
+import type { Beatmap, Measure, Change } from "./types";
 
-export type Change = {
-  bpm?: number;
-  hs?: number;
-  measure?: Measure;
-  gogotime?: boolean;
-  barline?: boolean;
-  delay?: number;
-};
-
-export type Beatmap = {
-  changes: {
-    [beatIndex: number]: Change;
-  };
-  beats: number[][];
-};
-
-export function parseBeatmap(lines: string[], start: number) {
+export function parseBeatmap(lines: string[]) {
   const beatmap: Beatmap = {
     changes: {},
     beats: [],
@@ -30,9 +14,9 @@ export function parseBeatmap(lines: string[], start: number) {
   let currentBar: number[] = [];
   let barDivision: { noteCount: number; change: Change }[] = [];
 
-  for (let i = start; i < lines.length; i++) {
+  for (let i = 0; i < lines.length; i++) {
     const line = lines[i].toLowerCase().trim();
-    if (line.includes("#end")) return { end: i, beatmap };
+    if (line.includes("#end")) return beatmap;
 
     if (line.includes("#")) {
       if (line.includes("#measure")) {
@@ -101,7 +85,7 @@ export function parseBeatmap(lines: string[], start: number) {
     }
   }
 
-  return { end: lines.length, beatmap };
+  return beatmap;
 }
 
 function sliceBarToBeats(notes: number[], measure: number) {
