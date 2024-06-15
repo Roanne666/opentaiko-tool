@@ -12,7 +12,7 @@ export type DifficultyInfo = {
   scoreInit: number;
   scoreDiff: number;
   balloon: number[];
-  sourceData: string[];
+  beatmapData: string[];
 };
 
 export type Song = {
@@ -156,7 +156,7 @@ function parseSong(songName: string, dir: string, genre: string, filePath: strin
     if (line.includes("scorediff:") && dInfo) dInfo.scoreDiff = Number(line.split(":")[1]);
 
     if (line.includes("#start") && dInfo) start = i;
-    if (line.includes("#end") && dInfo) dInfo.sourceData = lines.slice(start, i + 1);
+    if (line.includes("#end") && dInfo) dInfo.beatmapData = lines.slice(start, i + 1);
   }
 
   return song;
@@ -170,7 +170,7 @@ function createNewDifficultyInfo(difficulty: "easy" | "normal" | "hard" | "oni" 
     scoreInit: 0,
     scoreDiff: 0,
     balloon: [],
-    sourceData: [],
+    beatmapData: [],
   };
 }
 

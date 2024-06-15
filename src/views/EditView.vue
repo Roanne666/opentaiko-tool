@@ -140,7 +140,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
                 onClick() {
                   currentSong.value = row;
                   currentDifficulty.value = key;
-                  beatmapInput.value = d.sourceData.join("");
+                  beatmapInput.value = d.beatmapData.join("");
                 },
               },
               () => "编辑"
@@ -186,7 +186,7 @@ async function updateBeatmap() {
     if (!audioRef.value) return;
     if (!canvasRef.value) return;
     const difficultyInfo = currentSong.value.difficulties.find((d) => d.name === currentDifficulty.value);
-    if (difficultyInfo) difficultyInfo.sourceData = beatmapInput.value.split("\n");
+    if (difficultyInfo) difficultyInfo.beatmapData = beatmapInput.value.split("\n");
     const { beatmap, imageData } = createBeatmap(canvasRef.value, currentSong.value, currentDifficulty.value);
     canvasHeight.value = canvasRef.value.height + 1000;
     if (!beatmapViewer) beatmapViewer = new BeatmapViewer(canvasRef.value, audioRef.value);

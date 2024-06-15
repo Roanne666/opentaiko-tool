@@ -34,7 +34,7 @@ export function createBeatmap(
   const context = canvas.getContext("2d") as CanvasRenderingContext2D;
   const difficultyInfo = song.difficulties.find((d) => d.name === difficulty) as DifficultyInfo;
 
-  const beatmap = parseBeatmap(difficultyInfo.sourceData);
+  const beatmap = parseBeatmap(difficultyInfo.beatmapData);
   const { balloon } = difficultyInfo;
   const beatmapRows = getBeatmapRows(beatmap);
 
