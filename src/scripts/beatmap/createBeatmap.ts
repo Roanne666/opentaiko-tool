@@ -25,12 +25,7 @@ import { getBeatActions, type BeatPos } from "./beat";
 import { parseBeatmap } from "./parser";
 import type { Beatmap, ImageData, Measure } from "./types";
 
-export function createBeatmap(
-  canvas: HTMLCanvasElement,
-  song: Song,
-  difficulty: DifficlutyType,
-  ignoreHs = false
-): { beatmap: Beatmap; imageData: ImageData } {
+export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty: DifficlutyType, ignoreHs = false): { beatmap: Beatmap; imageData: ImageData } {
   const context = canvas.getContext("2d") as CanvasRenderingContext2D;
   const difficultyInfo = song.difficulties.find((d) => d.name === difficulty) as DifficultyInfo;
 
@@ -67,7 +62,9 @@ export function createBeatmap(
   let hs = 1;
   let measure: Measure = [4, 4];
   let gogotime = false;
+  // TODO: 小节线显示问题（不一定会加入该功能）
   let barline = true;
+  // TODO: 显示delay，即将补充该特性
   let delay = 0;
 
   for (let i = 0; i < beatmap.beats.length; i++) {
@@ -97,10 +94,10 @@ export function createBeatmap(
 
     const change = beatmap.changes[totalBeatCount];
     if (change) {
-      if (change.measure !== undefined) measure = change.measure;
-      if (change.bpm !== undefined) bpm = change.bpm;
-      if (change.hs !== undefined) hs = change.hs;
-      if (change.delay !== undefined) delay = change.delay;
+      if (change.measure) measure = change.measure;
+      if (change.bpm) bpm = change.bpm;
+      if (change.hs) hs = change.hs;
+      if (change.delay) delay = change.delay;
       if (change.barline !== undefined) barline = change.barline;
       if (change.gogotime !== undefined) gogotime = change.gogotime;
     }
@@ -133,41 +130,21 @@ export function createBeatmap(
     // 绘制音符
     for (let j = 0; j < notes.length; j++) {
       const subBeatCount = j / notes.length;
-      const currentBeatCount = totalBeatCount + subBeatCount;
-      const subChange = beatmap.changes[currentBeatCount];
+      const currentTotalBeatCount = totalBeatCount + subBeatCount;
+      const subChange = { ...beatmap.changes[currentTotalBeatCount] };
       if (subChange) {
-        if (subChange.measure !== undefined) measure = subChange.measure;
-        if (subChange.bpm !== undefined) bpm = subChange.bpm;
-        if (subChange.hs !== undefined) hs = subChange.hs;
-        if (subChange.delay !== undefined) delay = subChange.delay;
+        if (subChange.measure) measure = subChange.measure;
+        if (subChange.bpm) bpm = subChange.bpm;
+        if (subChange.hs) hs = subChange.hs;
+        if (subChange.delay) delay = subChange.delay;
         if (subChange.barline !== undefined) barline = subChange.barline;
         if (subChange.gogotime !== undefined) gogotime = subChange.gogotime;
 
+        const currentBarBeatCount = barBeatCount + subBeatCount;
         // 根据bpm和scroll变化绘制标记
-        if (ignoreHs) {
-          if (i === 0) {
-            markActions.push(...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount + subBeatCount, { bpm }));
-          } else {
-            subChange.hs = undefined;
-            markActions.push(
-              ...getMarkActions(currentBar + 1, barBeatCount, currentRow, rowBeatCount + subBeatCount, subChange)
-            );
-          }
-        } else {
-          if (i === 0) {
-            if (hs === 1) {
-              markActions.push(...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount + subBeatCount, { bpm }));
-            } else {
-              markActions.push(
-                ...getMarkActions(currentBar + 1, 0, currentRow, rowBeatCount + subBeatCount, { bpm, hs })
-              );
-            }
-          } else {
-            markActions.push(
-              ...getMarkActions(currentBar + 1, barBeatCount, currentRow, rowBeatCount + subBeatCount, subChange)
-            );
-          }
-        }
+        if (ignoreHs) subChange.hs = undefined;
+        if (currentTotalBeatCount === 0) subChange.bpm = bpm;
+        markActions.push(...getMarkActions(currentBar + 1, currentBarBeatCount, currentRow, rowBeatCount + subBeatCount, subChange));
       }
 
       const note = notes[j];

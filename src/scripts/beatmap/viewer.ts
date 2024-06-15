@@ -69,7 +69,10 @@ export class BeatmapViewer {
     // 与4/4拍相对的速度，例如4/16拍则为4倍速
     let speed = 1;
 
-    let time = this.audio.currentTime + song.offset;
+    // 当前的延迟
+    let delay = 0;
+
+    let time = this.audio.currentTime + song.offset - delay;
     while (time > 0) {
       const beat = beatmap.beats[totalBeatCount];
       for (let i = 0; i < beat.length; i++) {
@@ -77,6 +80,7 @@ export class BeatmapViewer {
         const change = beatmap.changes[totalBeatCount + subCount];
         if (change?.bpm) bps = change.bpm / 60;
         if (change?.measure) speed = change.measure[1] / 4;
+        if (change?.delay) delay = change.delay;
 
         const subBeatTime = 1 / beat.length / bps / speed;
         if (time > subBeatTime) {

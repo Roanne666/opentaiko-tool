@@ -10,7 +10,7 @@
       ><n-menu :options="menuOptions" default-value="score"
     /></n-layout-sider>
     <n-layout>
-      <n-layout-content content-style="padding-left: 24px;padding-right:10px;height:100vh">
+      <n-layout-content content-style="padding-left: 24px;padding-right:24px;height:100vh">
         <RouterView />
       </n-layout-content>
     </n-layout>
