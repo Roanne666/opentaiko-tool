@@ -22,13 +22,13 @@
 </style>
 
 <template>
-  <transition v-show="!currentSong" @after-leave="enterPreview" name="slide-fade">
+  <transition v-show="!currentSong" @after-leave="enterPlay" name="slide-fade">
     <n-flex vertical justify="center">
-      <song-table :use-score="false" :columns="columns"></song-table>
+      <song-table :use-score="true" :columns="columns"></song-table>
     </n-flex>
   </transition>
 
-  <transition v-show="isPreview" name="slide-fade">
+  <transition v-show="isPlay" name="slide-fade">
     <n-flex vertical justify="center">
       <n-scrollbar style="max-height: 90vh">
         <n-flex justify="center">
@@ -42,7 +42,7 @@
     </n-flex>
   </transition>
 
-  <transition v-show="isPreview" name="slide-fade">
+  <transition v-show="isPlay" name="slide-fade">
     <n-icon class="back-songs" @click="backToSongs" size="30">
       <back-icon></back-icon>
     </n-icon>
@@ -67,7 +67,7 @@ const currentSong = ref<Song>();
 const currentDifficulty = ref<DifficlutyType>("oni");
 
 let beatmapViewer: BeatmapViewer | undefined;
-const isPreview = ref(false);
+const isPlay = ref(false);
 
 const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
   ...basicColumns,
@@ -86,10 +86,20 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
     children: [
       createlevelSubCloumn(key),
       {
+        title: "分数",
+        key: `${key}score`,
+        align: "center",
+        width: 100,
+        render(row, rowIndex) {
+          const d = row.difficulties.find((d) => d.name === key);
+          return d ? d.score : "";
+        },
+      },
+      {
         title: "操作",
         key: `${key}handle`,
         align: "center",
-        width: 110,
+        width: 100,
         render(row, rowIndex) {
           const d = row.difficulties.find((d) => d.name === key);
           if (d && d.level !== 0) {
@@ -101,7 +111,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
                   currentDifficulty.value = key;
                 },
               },
-              () => "预览"
+              () => "游玩"
             );
           }
           return "";
@@ -112,7 +122,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
 }
 
 async function backToSongs() {
-  isPreview.value = false;
+  isPlay.value = false;
   await new Promise((resolve) => setTimeout(() => resolve(true), 250));
   currentSong.value = undefined;
   if (!audioRef.value) return;
@@ -121,8 +131,8 @@ async function backToSongs() {
 }
 
 // 提前绘制谱面和获取音频时长
-async function enterPreview() {
-  isPreview.value = true;
+async function enterPlay() {
+  isPlay.value = true;
   if (!currentSong.value) return;
   if (!audioRef.value) return;
   if (!canvasRef.value) return;

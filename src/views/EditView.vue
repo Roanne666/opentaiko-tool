@@ -103,8 +103,8 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
     children: [
       createlevelSubCloumn(key),
       {
-        title: "谱面编辑",
-        key: `${key}edit`,
+        title: "操作",
+        key: `${key}handle`,
         align: "center",
         width: 110,
         render(row, rowIndex) {

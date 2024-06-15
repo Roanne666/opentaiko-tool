@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import ScoreView from "@/views/ScoreView.vue";
+import PlayView from "@/views/PlayView.vue";
 import HomeView from "@/views/HomeView.vue";
 import PreviewView from "@/views/PreviewView.vue";
 import EditView from "@/views/EditView.vue";
@@ -13,9 +13,9 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: "/score",
-      name: "score",
-      component: ScoreView,
+      path: "/play",
+      name: "play",
+      component: PlayView,
     },
     {
       path: "/preview",

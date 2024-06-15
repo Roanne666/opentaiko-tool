@@ -38,7 +38,7 @@ function renderIcon(icon: Component) {
 
 const menuOptions: MenuOption[] = [
   createMenuOption("主页", "/", HomeIcon),
-  createMenuOption("乐曲成绩", "/score", MusicIcon),
+  createMenuOption("乐曲游玩", "/play", MusicIcon),
   createMenuOption("谱面预览", "/preview", PreviewIcon),
   createMenuOption("谱面编辑", "/edit", EditIcon),
 ];
