@@ -1,5 +1,5 @@
 import type { DifficultyInfo } from "@server/song";
-import { beatmapBgColor, songNameFont, difficultyFont, levelFont } from "@/scripts/beatmap/const";
+import { BEATMAP_BG_COLOR, SONG_NAME_FONT, DIFFICULTY_FONT, LEVEL_FONT } from "@/scripts/beatmap/const";
 
 const difficultyNames = {
   easy: "梅",
@@ -23,20 +23,20 @@ export function drawBackground(canvas: HTMLCanvasElement, songName: string, diff
   context.save();
 
   // 图片底色
-  context.fillStyle = beatmapBgColor;
+  context.fillStyle = BEATMAP_BG_COLOR;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
   // 歌名
   context.fillStyle = "black";
-  context.font = songNameFont;
+  context.font = SONG_NAME_FONT;
   context.fillText(songName, 10, 30);
 
   // 难度
-  context.font = difficultyFont;
+  context.font = DIFFICULTY_FONT;
   context.fillText(difficultyNames[name], 10, 55);
 
   // 星级
-  context.font = levelFont;
+  context.font = LEVEL_FONT;
   let levelText = "";
   for (let i = 0; i < 10; i++) {
     levelText += i < level ? "★" : "☆";

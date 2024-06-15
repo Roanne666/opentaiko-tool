@@ -1,4 +1,4 @@
-import { noteBorder } from "@/scripts/beatmap/const";
+import { NOTE_BORDER } from "@/scripts/beatmap/const";
 
 export abstract class DrawAction {
   public abstract draw(context: CanvasRenderingContext2D): void;
@@ -106,7 +106,7 @@ export class DrawNoteAction extends DrawAction {
     // 最外层黑边
     context.save();
     context.beginPath();
-    context.fillStyle = noteBorder;
+    context.fillStyle = NOTE_BORDER;
     context.arc(x, y, radius + 2.5, ...angles);
     context.fill();
     context.closePath();

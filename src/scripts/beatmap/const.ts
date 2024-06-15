@@ -3,112 +3,112 @@
 /**
  * 谱面起始位置，用于留边
  */
-export const marginX = 40;
-export const marginY = 90;
+export const MARGIN_X = 40;
+export const MARGIN_Y = 90;
 
 /**
  * 每行的拍子数
  */
-export const beatPerRow = 16;
+export const BEAT_PER_ROW = 16;
 
 /**
  * 拍子宽度
  */
-export const beatWidth = 60;
+export const BEAT_WIDTH = 60;
 
 /**
  * 行高度
  */
-export const rowHeight = 35;
+export const ROW_HEIGHT = 35;
 
 /**
  * 行间隔
  */
-export const rowSpace = 45;
+export const ROW_SPACE = 45;
 
 // ------ 颜色 ------
 
 /**
  * 音符黑边
  */
-export const noteBorder = "rgb(49,49,49)";
+export const NOTE_BORDER = "rgb(49,49,49)";
 
 /**
  * 咚音符的颜色
  */
-export const donColor = "rgb(255,66,66)";
+export const DON_COLOR = "rgb(255,66,66)";
 
 /**
  * 咔音符的颜色
  */
-export const kaColor = "rgb(67,200,255)";
+export const KA_COLOR = "rgb(67,200,255)";
 
 /**
  * 黄条颜色
  */
-export const yellowColor = "rgb(255,239,67)";
+export const YELLOW_COLOR = "rgb(255,239,67)";
 
 /**
  * 气球颜色
  */
-export const balloonColor = "rgb(255,191,67)";
+export const BALLOON_COLOR = "rgb(255,191,67)";
 
 /**
  * 亮色竖线
  */
-export const lightLineColor = "rgb(191,191,191)";
+export const LIGHT_LINE_COLOR = "rgb(191,191,191)";
 
 /**
  * 暗色竖线
  */
-export const drakLineColor = "rgb(159,159,159)";
+export const DARK_LINE_COLOR = "rgb(159,159,159)";
 
 /**
  * 谱面背景色
  */
-export const beatmapBgColor = "rgb(204,204,204)";
+export const BEATMAP_BG_COLOR = "rgb(204,204,204)";
 
 /**
  * 小节背景色
  */
-export const partBgColor = "rgb(128,128,128)";
+export const PART_BG_COLOR = "rgb(128,128,128)";
 
 /**
  * gogotime背景色
  */
-export const gogotimeBgColor = "rgb(255,192,192)";
+export const GOGOTIME_BG_COLOR = "rgb(255,192,192)";
 
 // ------ 尺寸 ------
 
 /**
  * 小音符的尺寸
  */
-export const smallNoteSize = 8.3;
+export const SMALL_NOTE_RADIUS = 8.3;
 
 /**
  * 大音符的尺寸
  */
-export const bigNoteSize = 11;
+export const BIG_NOTE_RADIUS = 11;
 
 // ------ 字体 ------
-export const fontfamily = ' "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif';
+export const FONT_FAMILY = ' "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif';
 
 /**
  * 歌曲名称字体
  */
-export const songNameFont = `normal bold 20px ${fontfamily}`;
+export const SONG_NAME_FONT = `normal bold 20px ${FONT_FAMILY}`;
 
 /**
  * 难度字体
  */
-export const difficultyFont = `normal bold 18px ${fontfamily}`;
+export const DIFFICULTY_FONT = `normal bold 18px ${FONT_FAMILY}`;
 
 /**
  * 等级字体
  */
-export const levelFont = `normal bold 24px ${fontfamily}`;
+export const LEVEL_FONT = `normal bold 24px ${FONT_FAMILY}`;
 
 /**
  * 标注小节，bpm和scroll等内容的字体
  */
-export const markFont = `normal 11px ${fontfamily}`;
+export const MARK_FONT = `normal 11px ${FONT_FAMILY}`;

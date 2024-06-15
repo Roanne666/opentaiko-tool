@@ -1,4 +1,4 @@
-import { markFont, rowSpace, rowHeight, beatWidth, marginX, marginY } from "@/scripts/beatmap/const";
+import { MARK_FONT, ROW_SPACE, ROW_HEIGHT, BEAT_WIDTH, MARGIN_X, MARGIN_Y } from "@/scripts/beatmap/const";
 import { DrawTextAction } from "@/scripts/beatmap/drawAction";
 import type { Change } from "./types";
 
@@ -13,11 +13,11 @@ export function getMarkActions(bar: number, barBeatCount: number, row: number, r
 
   if (barBeatCount === 0) {
     const action = new DrawTextAction({
-      font: markFont,
+      font: MARK_FONT,
       color: "black",
       text: `${bar}`,
-      x: marginX + rowBeatCount * beatWidth + 5,
-      y: marginY + (rowHeight + rowSpace) * row - 5,
+      x: MARGIN_X + rowBeatCount * BEAT_WIDTH + 5,
+      y: MARGIN_Y + (ROW_HEIGHT + ROW_SPACE) * row - 5,
     });
     actions.push(action);
   }
@@ -27,8 +27,8 @@ export function getMarkActions(bar: number, barBeatCount: number, row: number, r
   if (bar >= 10) margin = 25;
   if (bar >= 100) margin = 30;
 
-  const firstX = marginX + rowBeatCount * beatWidth + margin;
-  const firstY = marginY + (rowHeight + rowSpace) * row - 5;
+  const firstX = MARGIN_X + rowBeatCount * BEAT_WIDTH + margin;
+  const firstY = MARGIN_Y + (ROW_HEIGHT + ROW_SPACE) * row - 5;
 
   let drawBpm = false;
   let bpmIsFloat = false;
@@ -38,7 +38,7 @@ export function getMarkActions(bar: number, barBeatCount: number, row: number, r
     drawBpm = true;
     bpmIsFloat = Math.floor(change.bpm) < change.bpm;
     const action = new DrawTextAction({
-      font: markFont,
+      font: MARK_FONT,
       color: "black",
       text: `bpm${bpmIsFloat ? change.bpm.toFixed(2) : change.bpm}`,
       x: firstX,
@@ -47,15 +47,15 @@ export function getMarkActions(bar: number, barBeatCount: number, row: number, r
     actions.push(action);
   }
 
-  const secondX = marginX + rowBeatCount * beatWidth + margin + (bpmIsFloat ? 65 : 55);
-  const secondY = marginY + (rowHeight + rowSpace) * row - 5;
+  const secondX = MARGIN_X + rowBeatCount * BEAT_WIDTH + margin + (bpmIsFloat ? 65 : 55);
+  const secondY = MARGIN_Y + (ROW_HEIGHT + ROW_SPACE) * row - 5;
 
   // scroll标注
   if (change?.hs) {
     const isFloat = Math.floor(change.hs) < change.hs;
     actions.push(
       new DrawTextAction({
-        font: markFont,
+        font: MARK_FONT,
         color: "black",
         text: `hs ${isFloat ? change.hs.toFixed(2) : change.hs}`,
         x: drawBpm ? secondX : firstX,

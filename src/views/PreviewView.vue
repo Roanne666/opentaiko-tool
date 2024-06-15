@@ -55,7 +55,6 @@ import { NButton, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex,
 import { basicColumns, createlevelSubCloumn } from "@/stores/song";
 import type { DifficlutyType, Song } from "@server/song";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
-import { createBeatmap } from "@/scripts/beatmap";
 import SongTable from "@/components/SongTable.vue";
 import { BeatmapViewer } from "@/scripts/beatmap/viewer";
 
@@ -129,13 +128,12 @@ async function enterPreview() {
   if (!currentSong.value) return;
   if (!audioRef.value) return;
   if (!canvasRef.value) return;
-  const { beatmap, imageData } = createBeatmap(canvasRef.value, currentSong.value, currentDifficulty.value);
-  canvasHeight.value = canvasRef.value.height + 1000;
 
   const { dir, wave } = currentSong.value;
   audioRef.value.src = dir + "\\" + wave;
 
   if (!beatmapViewer) beatmapViewer = new BeatmapViewer(canvasRef.value, audioRef.value);
-  beatmapViewer.init(beatmap, imageData, currentSong.value);
+  beatmapViewer.init(currentSong.value, currentDifficulty.value);
+  canvasHeight.value = canvasRef.value.height + 1000;
 }
 </script>

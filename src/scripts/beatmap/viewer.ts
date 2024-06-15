@@ -1,8 +1,9 @@
-import type { Song } from "@server/song";
-import { beatWidth, marginX, marginY, rowHeight, rowSpace } from "@/scripts/beatmap/const";
+import type { DifficlutyType, Song } from "@server/song";
+import { BEAT_WIDTH, MARGIN_X, MARGIN_Y, ROW_HEIGHT, ROW_SPACE } from "@/scripts/beatmap/const";
 import { DrawStrokeAction } from "./drawAction";
 import { getBeatmapRows } from "./utils";
-import type { Beatmap, ImageData } from "./types";
+import type { Beatmap } from "./types";
+import { createBeatmap } from "./createBeatmap";
 
 export class BeatmapViewer {
   public canvas: HTMLCanvasElement;
@@ -16,7 +17,9 @@ export class BeatmapViewer {
     this.audio = audio;
   }
 
-  public init(beatmap: Beatmap, imageData: ImageData, song: Song) {
+  public init(song: Song, difficulty: DifficlutyType) {
+    const { beatmap, imageData } = createBeatmap(this.canvas, song, difficulty);
+
     this.sourceImage.src = imageData.data;
     this.imageUid = imageData.uid;
     this.sourceImage.onload = async () => {
@@ -36,9 +39,9 @@ export class BeatmapViewer {
           color: "red",
           lineWidth: 2,
           x1: currentX,
-          y1: marginY + row * (rowSpace + rowHeight) - 15,
+          y1: MARGIN_Y + row * (ROW_SPACE + ROW_HEIGHT) - 15,
           x2: currentX,
-          y2: marginY + row * (rowSpace + rowHeight) + 45,
+          y2: MARGIN_Y + row * (ROW_SPACE + ROW_HEIGHT) + 45,
         }).draw(context);
 
         return true;
@@ -53,7 +56,7 @@ export class BeatmapViewer {
   }
 
   private getCurrentPos(song: Song, beatmap: Beatmap, beatmapRows: number[]): { currentX: number; row: number } {
-    let currentX = marginX;
+    let currentX = MARGIN_X;
 
     let totalBeatCount = 0;
 
@@ -81,7 +84,7 @@ export class BeatmapViewer {
         } else {
           const restCount = time * bps * speed;
           const finalCount = subCount + restCount;
-          currentX = marginX + (rowBeatCount + finalCount) * beatWidth;
+          currentX = MARGIN_X + (rowBeatCount + finalCount) * BEAT_WIDTH;
           time = 0;
           break;
         }

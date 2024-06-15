@@ -3,9 +3,16 @@ import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import type { AddressInfo } from "net";
 import { type Song, loadSongs } from "./song";
+import { writeFileSync } from "fs";
+import { resolve } from "path";
+import { convertSongToTja } from "./utils";
 const history = require("connect-history-api-fallback");
+const iconv = require("iconv-lite");
+
+const SONG_DIR = process.env.NODE_ENV ? "Songs" : "../Songs";
 
 const app = express();
+app.use(express.json());
 
 app.use(
   history({
@@ -32,13 +39,16 @@ if (!process.env.NODE_ENV) {
 }
 
 app.get("/api/songs", async (req: Request, res: Response, next: NextFunction) => {
-  if (process.env.NODE_ENV) {
-    const songs: Song[] = await loadSongs("Songs");
-    res.send(songs);
-  } else {
-    const songs: Song[] = await loadSongs("../Songs");
-    res.send(songs);
-  }
+  const songs: Song[] = await loadSongs(SONG_DIR);
+  res.send(songs);
+});
+
+app.post("/api/modifySong", async (req: Request, res: Response, next: NextFunction) => {
+  const song: Song = req.body;
+  const tjaString = convertSongToTja(song);
+  const buffers = iconv.encode(tjaString, "Shift_JIS");
+  writeFileSync(resolve(song.dir, song.name + ".tja"), buffers);
+  res.send(true);
 });
 
 if (process.env.NODE_ENV) {

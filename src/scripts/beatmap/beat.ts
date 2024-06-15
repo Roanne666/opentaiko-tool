@@ -1,14 +1,14 @@
-import { marginX, beatWidth, marginY, rowHeight, rowSpace, gogotimeBgColor, drakLineColor, lightLineColor } from "./const";
+import { MARGIN_X, BEAT_WIDTH, MARGIN_Y, ROW_HEIGHT, ROW_SPACE, GOGOTIME_BG_COLOR, DARK_LINE_COLOR, LIGHT_LINE_COLOR } from "./const";
 import { DrawRectAction, DrawStrokeAction, type DrawAction } from "./drawAction";
 import type { Change } from "./types";
 
 export type BeatPos = "start" | "middle" | "end";
 
 export function getBeatActions(row: number, rowBeatCount: number, beatPos: BeatPos, change: Change) {
-  const beginX = marginX + rowBeatCount * beatWidth;
-  const beginY = marginY + (rowHeight + rowSpace) * row - 15;
-  const endX = marginX + rowBeatCount * beatWidth;
-  const endY = marginY + (rowHeight + rowSpace) * row + rowHeight;
+  const beginX = MARGIN_X + rowBeatCount * BEAT_WIDTH;
+  const beginY = MARGIN_Y + (ROW_HEIGHT + ROW_SPACE) * row - 15;
+  const endX = MARGIN_X + rowBeatCount * BEAT_WIDTH;
+  const endY = MARGIN_Y + (ROW_HEIGHT + ROW_SPACE) * row + ROW_HEIGHT;
 
   const actions: DrawAction[] = [];
 
@@ -16,13 +16,13 @@ export function getBeatActions(row: number, rowBeatCount: number, beatPos: BeatP
   if (change.gogotime) {
     // 当前行第一拍时补齐左侧，最后一拍时补齐右侧
     if (rowBeatCount === 0) {
-      const gogoTimeAction = new DrawRectAction({ color: gogotimeBgColor, x: beginX - marginX, y: beginY - 2, width: beatWidth + marginX, height: 15 });
+      const gogoTimeAction = new DrawRectAction({ color: GOGOTIME_BG_COLOR, x: beginX - MARGIN_X, y: beginY - 2, width: BEAT_WIDTH + MARGIN_X, height: 15 });
       actions.push(gogoTimeAction);
     } else if (rowBeatCount === 15) {
-      const gogoTimeAction = new DrawRectAction({ color: gogotimeBgColor, x: beginX, y: beginY - 2, width: beatWidth + marginX, height: 15 });
+      const gogoTimeAction = new DrawRectAction({ color: GOGOTIME_BG_COLOR, x: beginX, y: beginY - 2, width: BEAT_WIDTH + MARGIN_X, height: 15 });
       actions.push(gogoTimeAction);
     } else {
-      const gogoTimeAction = new DrawRectAction({ color: gogotimeBgColor, x: beginX, y: beginY - 2, width: beatWidth, height: 15 });
+      const gogoTimeAction = new DrawRectAction({ color: GOGOTIME_BG_COLOR, x: beginX, y: beginY - 2, width: BEAT_WIDTH, height: 15 });
       actions.push(gogoTimeAction);
     }
   }
@@ -30,20 +30,20 @@ export function getBeatActions(row: number, rowBeatCount: number, beatPos: BeatP
   // 拍子中间线
   const beatSubLine = new DrawStrokeAction({
     lineWidth: 2,
-    color: drakLineColor,
-    x1: beginX + beatWidth / 2,
+    color: DARK_LINE_COLOR,
+    x1: beginX + BEAT_WIDTH / 2,
     y1: beginY + 20,
-    x2: endX + beatWidth / 2,
+    x2: endX + BEAT_WIDTH / 2,
     y2: endY - 5,
   });
 
   // 拍子结束线
   const beatEndLineAction = new DrawStrokeAction({
     lineWidth: 2,
-    color: lightLineColor,
-    x1: beginX + beatWidth,
+    color: LIGHT_LINE_COLOR,
+    x1: beginX + BEAT_WIDTH,
     y1: beginY + 20,
-    x2: endX + beatWidth,
+    x2: endX + BEAT_WIDTH,
     y2: endY - 5,
   });
 
@@ -71,9 +71,9 @@ export function getBeatActions(row: number, rowBeatCount: number, beatPos: BeatP
     const barEndLineAction = new DrawStrokeAction({
       lineWidth: 2,
       color: "white",
-      x1: beginX + beatWidth,
+      x1: beginX + BEAT_WIDTH,
       y1: beginY,
-      x2: endX + beatWidth,
+      x2: endX + BEAT_WIDTH,
       y2: endY,
     });
     actions.push(barEndLineAction);

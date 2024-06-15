@@ -1,4 +1,4 @@
-import { noteBorder } from "@/scripts/beatmap/const";
+import { NOTE_BORDER } from "@/scripts/beatmap/const";
 import { DrawRectAction, type DrawAction } from "@/scripts/beatmap/drawAction";
 import { getNoteAction } from "@/scripts/beatmap/note";
 
@@ -40,7 +40,7 @@ function getFillActions(x: number, y: number, color: string, interval: number, r
   // 上下黑边
   actions.push(
     new DrawRectAction({
-      color: noteBorder,
+      color: NOTE_BORDER,
       x: x,
       y: y - radius - 2.5,
       width: interval,

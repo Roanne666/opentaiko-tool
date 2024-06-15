@@ -1,4 +1,4 @@
-import { partBgColor, rowHeight, rowSpace, marginY } from "@/scripts/beatmap/const";
+import { PART_BG_COLOR, ROW_HEIGHT, ROW_SPACE, MARGIN_Y } from "@/scripts/beatmap/const";
 
 /**
  * 绘制行
@@ -10,15 +10,15 @@ export function drawRow(context: CanvasRenderingContext2D, row: number, canvasWi
   context.save();
   // 黑色边
   context.fillStyle = "black";
-  context.fillRect(0, marginY + row * (rowHeight + rowSpace) - 2, canvasWidth, rowHeight + 4);
+  context.fillRect(0, MARGIN_Y + row * (ROW_HEIGHT + ROW_SPACE) - 2, canvasWidth, ROW_HEIGHT + 4);
 
   // 灰色底
-  context.fillStyle = partBgColor;
-  context.fillRect(0, marginY + row * (rowHeight + rowSpace), canvasWidth, rowHeight);
+  context.fillStyle = PART_BG_COLOR;
+  context.fillRect(0, MARGIN_Y + row * (ROW_HEIGHT + ROW_SPACE), canvasWidth, ROW_HEIGHT);
 
   // 白色内边
   context.fillStyle = "white";
-  context.fillRect(0, marginY + row * (rowHeight + rowSpace), canvasWidth, 4);
-  context.fillRect(0, marginY + row * (rowHeight + rowSpace) + rowHeight - 4, canvasWidth, 4);
+  context.fillRect(0, MARGIN_Y + row * (ROW_HEIGHT + ROW_SPACE), canvasWidth, 4);
+  context.fillRect(0, MARGIN_Y + row * (ROW_HEIGHT + ROW_SPACE) + ROW_HEIGHT - 4, canvasWidth, 4);
   context.restore();
 }

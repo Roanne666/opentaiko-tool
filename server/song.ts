@@ -25,9 +25,9 @@ export type Song = {
   difficulties: DifficultyInfo[];
 };
 
-const defaultExclude = ["S1 Dan-i Dojo", "S2 Taiko Towers", "X1 Favorite", "X2 Recent", "X3 Search By Difficulty"];
+const DEFAULT_EXCLUDE = ["S1 Dan-i Dojo", "S2 Taiko Towers", "X1 Favorite", "X2 Recent", "X3 Search By Difficulty"];
 
-export async function loadSongs(root: string, exclude = defaultExclude) {
+export async function loadSongs(root: string, exclude = DEFAULT_EXCLUDE) {
   const stat = await isDir(root);
   if (!stat) return [];
   const songs: Song[] = await parseSongs(root, exclude);

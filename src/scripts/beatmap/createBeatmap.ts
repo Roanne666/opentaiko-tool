@@ -1,19 +1,19 @@
 import type { Song, DifficlutyType, DifficultyInfo } from "@server/song";
 import { drawBackground } from "./background";
 import {
-  marginX,
-  beatWidth,
-  beatPerRow,
-  marginY,
-  rowHeight,
-  rowSpace,
-  balloonColor,
-  yellowColor,
-  bigNoteSize,
-  smallNoteSize,
-  donColor,
-  kaColor,
-  markFont,
+  MARGIN_X,
+  BEAT_WIDTH,
+  BEAT_PER_ROW,
+  MARGIN_Y,
+  ROW_HEIGHT,
+  ROW_SPACE,
+  BALLOON_COLOR,
+  YELLOW_COLOR,
+  BIG_NOTE_RADIUS,
+  SMALL_NOTE_RADIUS,
+  DON_COLOR,
+  KA_COLOR,
+  MARK_FONT,
 } from "./const";
 import { DrawAction, DrawTextAction } from "./drawAction";
 import { getLongActions } from "./long";
@@ -39,9 +39,9 @@ export function createBeatmap(
   const beatmapRows = getBeatmapRows(beatmap);
 
   // 调整canvas大小并绘制背景
-  canvas.width = 2 * marginX + beatWidth * beatPerRow;
+  canvas.width = 2 * MARGIN_X + BEAT_WIDTH * BEAT_PER_ROW;
 
-  canvas.height = marginY + (beatmapRows.length + 1) * (rowHeight + rowSpace) - rowSpace + 25;
+  canvas.height = MARGIN_Y + (beatmapRows.length + 1) * (ROW_HEIGHT + ROW_SPACE) - ROW_SPACE + 25;
   drawBackground(canvas, song.name, difficultyInfo);
 
   // 初始化数据
@@ -118,17 +118,17 @@ export function createBeatmap(
 
     // tja当前行没有写notes时（特殊情况）
     if (notes.length === 0 && currentLong !== "") {
-      const x = marginX + totalBeatCount * beatWidth;
-      const y = marginY + currentRow * (rowHeight + rowSpace) + rowHeight / 2;
+      const x = MARGIN_X + totalBeatCount * BEAT_WIDTH;
+      const y = MARGIN_Y + currentRow * (ROW_HEIGHT + ROW_SPACE) + ROW_HEIGHT / 2;
 
-      let color = currentLong === "balloon" ? balloonColor : yellowColor;
-      let radius = currentLong === "big" ? bigNoteSize : smallNoteSize;
-      const longActions = getLongActions({ x, y, color, radius, drawType: "middle", interval: beatWidth });
+      let color = currentLong === "balloon" ? BALLOON_COLOR : YELLOW_COLOR;
+      let radius = currentLong === "big" ? BIG_NOTE_RADIUS : SMALL_NOTE_RADIUS;
+      const longActions = getLongActions({ x, y, color, radius, drawType: "middle", interval: BEAT_WIDTH });
       noteActions.push(...longActions);
     }
 
     // 音符间隔
-    const noteInterval = beatWidth / notes.length;
+    const noteInterval = BEAT_WIDTH / notes.length;
 
     // 绘制音符
     for (let j = 0; j < notes.length; j++) {
@@ -171,13 +171,13 @@ export function createBeatmap(
       }
 
       const note = notes[j];
-      const noteX = marginX + rowBeatCount * beatWidth + j * noteInterval;
-      const noteY = marginY + currentRow * (rowHeight + rowSpace) + rowHeight / 2;
+      const noteX = MARGIN_X + rowBeatCount * BEAT_WIDTH + j * noteInterval;
+      const noteY = MARGIN_Y + currentRow * (ROW_HEIGHT + ROW_SPACE) + ROW_HEIGHT / 2;
 
       if (note === 0) {
         if (currentLong !== "") {
-          let color = currentLong === "balloon" ? balloonColor : yellowColor;
-          let radius = currentLong === "big" ? bigNoteSize : smallNoteSize;
+          let color = currentLong === "balloon" ? BALLOON_COLOR : YELLOW_COLOR;
+          let radius = currentLong === "big" ? BIG_NOTE_RADIUS : SMALL_NOTE_RADIUS;
           const longActions = getLongActions({
             x: noteX,
             y: noteY,
@@ -189,20 +189,20 @@ export function createBeatmap(
           noteActions.push(...longActions);
         }
       } else if (note === 1) {
-        noteActions.push(getNoteAction(noteX, noteY, donColor, smallNoteSize, "full"));
+        noteActions.push(getNoteAction(noteX, noteY, DON_COLOR, SMALL_NOTE_RADIUS, "full"));
       } else if (note === 2) {
-        noteActions.push(getNoteAction(noteX, noteY, kaColor, smallNoteSize, "full"));
+        noteActions.push(getNoteAction(noteX, noteY, KA_COLOR, SMALL_NOTE_RADIUS, "full"));
       } else if (note === 3) {
-        noteActions.push(getNoteAction(noteX, noteY, donColor, bigNoteSize, "full"));
+        noteActions.push(getNoteAction(noteX, noteY, DON_COLOR, BIG_NOTE_RADIUS, "full"));
       } else if (note === 4) {
-        noteActions.push(getNoteAction(noteX, noteY, kaColor, bigNoteSize, "full"));
+        noteActions.push(getNoteAction(noteX, noteY, KA_COLOR, BIG_NOTE_RADIUS, "full"));
       } else if (note === 5) {
         currentLong = "small";
         const longActions = getLongActions({
           x: noteX,
           y: noteY,
-          color: yellowColor,
-          radius: smallNoteSize,
+          color: YELLOW_COLOR,
+          radius: SMALL_NOTE_RADIUS,
           drawType: "start",
           interval: noteInterval,
         });
@@ -212,8 +212,8 @@ export function createBeatmap(
         const longActions = getLongActions({
           x: noteX,
           y: noteY,
-          color: yellowColor,
-          radius: bigNoteSize,
+          color: YELLOW_COLOR,
+          radius: BIG_NOTE_RADIUS,
           drawType: "start",
           interval: noteInterval,
         });
@@ -224,7 +224,7 @@ export function createBeatmap(
         // 气球数字标记
         const balloonNum = balloon[balloonIndex];
         const textAction = new DrawTextAction({
-          font: markFont,
+          font: MARK_FONT,
           color: "black",
           text: `${balloonNum}`,
           x: noteX - 4,
@@ -235,8 +235,8 @@ export function createBeatmap(
         const longActions = getLongActions({
           x: noteX,
           y: noteY,
-          color: balloonColor,
-          radius: smallNoteSize,
+          color: BALLOON_COLOR,
+          radius: SMALL_NOTE_RADIUS,
           drawType: "start",
           interval: noteInterval,
         });
@@ -245,8 +245,8 @@ export function createBeatmap(
         balloonIndex += 1;
       } else if (note === 8) {
         if (currentLong !== "") {
-          let color = currentLong === "balloon" ? balloonColor : yellowColor;
-          let radius = currentLong === "big" ? bigNoteSize : smallNoteSize;
+          let color = currentLong === "balloon" ? BALLOON_COLOR : YELLOW_COLOR;
+          let radius = currentLong === "big" ? BIG_NOTE_RADIUS : SMALL_NOTE_RADIUS;
           const longActions = getLongActions({
             x: noteX,
             y: noteY,
