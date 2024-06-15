@@ -2,7 +2,7 @@
   "name": "opentaiko-tool",
   "version": "0.1.3",
   "private": true,
-  "bin": "./server_dist/index.js",
+  "bin": "./server_dist/app.js",
   "pkg": {
     "targets": [
       "node18-win-x64"
@@ -10,7 +10,7 @@
     "outputPath": "bundle"
   },
   "scripts": {
-    "start": "set NODE_ENV=development && npm run build-server && node ./server_dist/index.js",
+    "start": "set NODE_ENV=development && npm run build-server && node ./server_dist/app.js",
     "dev": "vite",
     "build": "npm run build-web && npm run build-server && npm run build-exe",
     "build-web": "run-p type-check \"build-only {@}\" --",
