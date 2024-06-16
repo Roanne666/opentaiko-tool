@@ -52,11 +52,12 @@
 <script setup lang="ts">
 import { Transition, h, ref } from "vue";
 import { NButton, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex, NScrollbar, NBackTop } from "naive-ui";
-import { basicColumns, createlevelSubCloumn } from "@/stores/song";
+import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
 import type { DifficlutyType, Song } from "@server/song";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import SongTable from "@/components/SongTable.vue";
 import { BeatmapViewer } from "@/scripts/beatmap/viewer";
+import { isInGame } from "@/scripts/stores/global";
 
 const canvasRef = ref<HTMLCanvasElement>();
 const audioRef = ref<HTMLAudioElement>();
@@ -99,6 +100,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
                 onClick() {
                   currentSong.value = row;
                   currentDifficulty.value = key;
+                  isInGame.value = true;
                 },
               },
               () => "游玩"
@@ -114,6 +116,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
 async function backToSongs() {
   isPlay.value = false;
   await new Promise((resolve) => setTimeout(() => resolve(true), 250));
+  isInGame.value = false;
   currentSong.value = undefined;
   if (!audioRef.value) return;
   audioRef.value.pause();

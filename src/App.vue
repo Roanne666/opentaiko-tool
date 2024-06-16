@@ -2,11 +2,27 @@
 .n-layout-scroll-container {
   overflow-y: hidden;
 }
+
+.sider-enter-active,
+.sider-leave-active {
+  transition: all 0.25s;
+}
+
+.sider-enter-from,
+.sider-leave-to {
+  transform: translateX(-500px);
+  opacity: 0;
+}
 </style>
 
 <template>
   <n-layout has-sider style="padding-top: 20px; height: 99vh">
-    <n-layout-sider bordered width="220" content-style="padding-left: 24px;padding-right:10px"><n-menu :options="menuOptions" default-value="score" /></n-layout-sider>
+    <transition v-show="!isInGame" name="sider">
+      <n-layout-sider bordered width="220" content-style="padding-left: 24px;padding-right:10px">
+        <n-menu :options="menuOptions" default-value="score" />
+      </n-layout-sider>
+    </transition>
+
     <n-layout>
       <n-layout-content content-style="padding-left: 24px;padding-right:24px;height:100vh">
         <RouterView />
@@ -19,16 +35,13 @@
 import "@/assets/base.css";
 import { RouterLink, RouterView } from "vue-router";
 import { NLayout, NLayoutSider, NLayoutContent, NMenu, type MenuOption, NIcon } from "naive-ui";
-import { HomeOutline as HomeIcon, MusicalNotesOutline as MusicIcon, BarcodeOutline as PreviewIcon ,GameControllerOutline as PlayIcon} from "@vicons/ionicons5";
+import { HomeOutline as HomeIcon, MusicalNotesOutline as MusicIcon, BarcodeOutline as PreviewIcon, GameControllerOutline as PlayIcon } from "@vicons/ionicons5";
 import { Edit as EditIcon } from "@vicons/carbon";
-import { h, type Component } from "vue";
-import { fetchAllSongs } from "@/stores/song";
+import { h, type Component, Transition } from "vue";
+import { fetchAllSongs } from "@/scripts/stores/song";
+import { isInGame } from "./scripts/stores/global";
 
 fetchAllSongs();
-
-function renderIcon(icon: Component) {
-  return () => h(NIcon, null, { default: () => h(icon) });
-}
 
 const menuOptions: MenuOption[] = [
   createMenuOption("主页", "/", HomeIcon),
@@ -42,7 +55,7 @@ function createMenuOption(text: string, to: string, icon: Component) {
   return {
     label: () => h(RouterLink, { to }, { default: () => text }),
     key: to,
-    icon: renderIcon(icon),
+    icon: () => h(NIcon, null, { default: () => h(icon) }),
   };
 }
 </script>

@@ -1,8 +1,7 @@
-import type { BeatmapViewer } from "@/scripts/beatmap";
 import type { DifficlutyType, Song } from "@server/song";
 import type { DataTableColumn, DataTableColumnGroup } from "naive-ui";
 import type { TableBaseColumn } from "naive-ui/es/data-table/src/interface";
-import { reactive, ref } from "vue";
+import { reactive } from "vue";
 
 // ------- 常量 -------
 export type DifficultyTypes = "all" | DifficlutyType;

@@ -55,7 +55,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 import { NCheckboxGroup, NSpace, NCheckbox, NRadioGroup, NRadio, NDataTable, type DataTableColumn, type DataTableColumnGroup } from "naive-ui";
-import { allSongs, genres, levels, scores, showSongs, type DifficultyTypes, type LevelTypes, type ScoreTypes } from "@/stores/song";
+import { allSongs, genres, levels, scores, showSongs, type DifficultyTypes, type LevelTypes, type ScoreTypes } from "@/scripts/stores/song";
 import type { Song } from "@server/song";
 
 const props = defineProps<{

@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import { Transition, h, ref } from "vue";
 import { NButton, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex, NScrollbar, NBackTop } from "naive-ui";
-import { basicColumns, createlevelSubCloumn } from "@/stores/song";
+import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
 import type { DifficlutyType, Song } from "@server/song";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import SongTable from "@/components/SongTable.vue";
