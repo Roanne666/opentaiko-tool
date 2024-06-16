@@ -24,7 +24,7 @@
 <template>
   <transition v-show="!currentSong" @after-leave="enterPlay" name="slide-fade">
     <n-flex vertical justify="center">
-      <song-table :use-score="true" :columns="columns"></song-table>
+      <song-table :use-score="false" :columns="columns"></song-table>
     </n-flex>
   </transition>
 
@@ -85,16 +85,6 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
     align: "center",
     children: [
       createlevelSubCloumn(key),
-      {
-        title: "分数",
-        key: `${key}score`,
-        align: "center",
-        width: 100,
-        render(row, rowIndex) {
-          const d = row.difficulties.find((d) => d.name === key);
-          return d ? d.score : "";
-        },
-      },
       {
         title: "操作",
         key: `${key}handle`,

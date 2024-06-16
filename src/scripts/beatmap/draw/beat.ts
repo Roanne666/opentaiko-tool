@@ -1,8 +1,6 @@
-import { MARGIN_X, BEAT_WIDTH, MARGIN_Y, ROW_HEIGHT, ROW_SPACE, GOGOTIME_BG_COLOR, DARK_LINE_COLOR, LIGHT_LINE_COLOR } from "./const";
-import { DrawRectAction, DrawStrokeAction, type DrawAction } from "./drawAction";
-import type { Change } from "./types";
-
-export type BeatPos = "start" | "middle" | "end";
+import { MARGIN_X, BEAT_WIDTH, MARGIN_Y, ROW_HEIGHT, ROW_SPACE, GOGOTIME_BG_COLOR, DARK_LINE_COLOR, LIGHT_LINE_COLOR } from "@/scripts/beatmap/const";
+import { DrawRectAction, DrawStrokeAction, type DrawAction } from "@/scripts/utils/drawAction";
+import type { BeatPos, Change } from "@/scripts/types";
 
 export function getBeatActions(row: number, rowBeatCount: number, beatPos: BeatPos, change: Change) {
   const beginX = MARGIN_X + rowBeatCount * BEAT_WIDTH;

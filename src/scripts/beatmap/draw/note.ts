@@ -1,4 +1,4 @@
-import { DrawNoteAction } from "@/scripts/beatmap/drawAction";
+import { DrawNoteAction } from "@/scripts/utils/drawAction";
 
 export function getNoteAction(x: number, y: number, color: string, radius: number, arcType: "left" | "right" | "full") {
   const angles: [number, number] = [0, 2 * Math.PI];

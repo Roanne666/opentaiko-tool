@@ -1,6 +1,6 @@
 import { MARK_FONT, ROW_SPACE, ROW_HEIGHT, BEAT_WIDTH, MARGIN_X, MARGIN_Y } from "@/scripts/beatmap/const";
-import { DrawTextAction } from "@/scripts/beatmap/drawAction";
-import type { Change } from "./types";
+import { DrawTextAction } from "@/scripts/utils/drawAction";
+import type { Change } from "@/scripts/types";
 
 /**
  * 绘制bpm，scroll等相关标记

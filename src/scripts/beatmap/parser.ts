@@ -1,4 +1,4 @@
-import type { Beatmap, Measure, Change } from "./types";
+import type { Beatmap, Measure, Change } from "@/scripts/types";
 
 export function parseBeatmap(lines: string[]) {
   const beatmap: Beatmap = {

@@ -1,5 +1,5 @@
 import type { Song, DifficlutyType, DifficultyInfo } from "@server/song";
-import { drawBackground } from "./background";
+import { drawBackground } from "./draw/background";
 import {
   MARGIN_X,
   BEAT_WIDTH,
@@ -15,15 +15,11 @@ import {
   KA_COLOR,
   MARK_FONT,
 } from "./const";
-import { DrawAction, DrawTextAction } from "./drawAction";
-import { getLongActions } from "./long";
-import { getMarkActions } from "./mark";
-import { getNoteAction } from "./note";
-import { drawRow } from "./row";
-import { getBeatmapRows } from "./utils";
-import { getBeatActions, type BeatPos } from "./beat";
-import { parseBeatmap } from "./parser";
-import type { Beatmap, ImageData, Measure } from "./types";
+import { DrawAction, DrawTextAction } from "@/scripts/utils/drawAction";
+import { drawRow, getBeatActions, getLongActions, getMarkActions, getNoteAction } from "@/scripts/beatmap/draw";
+import { getBeatmapRows } from "@/scripts/beatmap/utils";
+import { parseBeatmap } from "@/scripts/beatmap/parser";
+import type { BeatPos, Beatmap, ImageData, Measure } from "@/scripts/types";
 
 export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty: DifficlutyType, ignoreHs = false): { beatmap: Beatmap; imageData: ImageData } {
   const context = canvas.getContext("2d") as CanvasRenderingContext2D;

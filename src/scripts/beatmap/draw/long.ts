@@ -1,6 +1,6 @@
 import { NOTE_BORDER } from "@/scripts/beatmap/const";
-import { DrawRectAction, type DrawAction } from "@/scripts/beatmap/drawAction";
-import { getNoteAction } from "@/scripts/beatmap/note";
+import { DrawRectAction, type DrawAction } from "@/scripts/utils/drawAction";
+import { getNoteAction } from "@/scripts/beatmap/draw/note";
 
 /**
  * 绘制长条（黄条，气球）

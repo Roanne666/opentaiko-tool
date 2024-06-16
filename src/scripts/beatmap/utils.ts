@@ -1,4 +1,4 @@
-import type { Beatmap, Measure } from "./types";
+import type { Beatmap, Measure } from "@/scripts/types";
 
 /**
  * 解析获取每一行的节拍数

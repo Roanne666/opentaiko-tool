@@ -46,7 +46,7 @@
       pageSize: 10,
     }"
     :single-line="false"
-    style="padding-right: 30px;"
+    style="padding-right: 30px"
   >
     <template #empty><span style="user-select: none; color: gray"> 没有乐曲了咚~ </span></template>
   </n-data-table>
@@ -54,26 +54,8 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
-import {
-  NCheckboxGroup,
-  NSpace,
-  NCheckbox,
-  NRadioGroup,
-  NRadio,
-  NDataTable,
-  type DataTableColumn,
-  type DataTableColumnGroup,
-} from "naive-ui";
-import {
-  allSongs,
-  genres,
-  levels,
-  scores,
-  showSongs,
-  type DifficultyTypes,
-  type LevelTypes,
-  type ScoreTypes,
-} from "@/stores/song";
+import { NCheckboxGroup, NSpace, NCheckbox, NRadioGroup, NRadio, NDataTable, type DataTableColumn, type DataTableColumnGroup } from "naive-ui";
+import { allSongs, genres, levels, scores, showSongs, type DifficultyTypes, type LevelTypes, type ScoreTypes } from "@/stores/song";
 import type { Song } from "@server/song";
 
 const props = defineProps<{
@@ -103,11 +85,7 @@ watch([genreSelect, difficultySelect, levelSelect, scoreSelcet], () => {
 
       let scoreMatch = scoreSelcet.value === "全部";
       if (!scoreMatch) {
-        scoreMatch = s.difficulties.find(
-          (d) => d.score >= scores[scoreSelcet.value][0] && d.score < scores[scoreSelcet.value][1]
-        )
-          ? true
-          : false;
+        scoreMatch = s.difficulties.find((d) => d.score >= scores[scoreSelcet.value][0] && d.score < scores[scoreSelcet.value][1]) ? true : false;
       }
 
       isMatch = levelMatch && scoreMatch;

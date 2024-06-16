@@ -16,6 +16,8 @@ export type Beatmap = {
   beats: number[][];
 };
 
+export type BeatPos = "start" | "middle" | "end";
+
 export type ImageData = {
   uid: number;
   data: string;
