@@ -32,13 +32,10 @@
     <n-flex vertical justify="center">
       <n-scrollbar style="max-height: 90vh">
         <n-flex justify="center">
-          <canvas ref="canvasRef" width="1080" height="1200"></canvas>
+          <canvas ref="canvasRef" width="1200" height="1200" />
         </n-flex>
         <n-back-top :right="100" :bottom="20" />
       </n-scrollbar>
-      <n-flex justify="center">
-        <audio ref="audioRef" controls oncontextmenu="return false" controlslist="nodownload" style="width: 1000px" />
-      </n-flex>
     </n-flex>
   </transition>
 
@@ -47,6 +44,8 @@
       <back-icon></back-icon>
     </n-icon>
   </transition>
+
+  <audio ref="audioRef" />
 </template>
 
 <script setup lang="ts">
@@ -56,18 +55,16 @@ import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
 import type { DifficlutyType, Song } from "@server/song";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import SongTable from "@/components/SongTable.vue";
-import { BeatmapViewer } from "@/scripts/beatmap/viewer";
 import { isInGame } from "@/scripts/stores/global";
+import { GameController } from "@/scripts/game/gameController";
 
 const canvasRef = ref<HTMLCanvasElement>();
 const audioRef = ref<HTMLAudioElement>();
 
-const canvasHeight = ref(1200);
-
 const currentSong = ref<Song>();
 const currentDifficulty = ref<DifficlutyType>("oni");
 
-let beatmapViewer: BeatmapViewer | undefined;
+let gameController: GameController | undefined;
 const isPlay = ref(false);
 
 const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
@@ -115,6 +112,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
 
 async function backToSongs() {
   isPlay.value = false;
+  gameController?.stop()
   await new Promise((resolve) => setTimeout(() => resolve(true), 250));
   isInGame.value = false;
   currentSong.value = undefined;
@@ -133,8 +131,7 @@ async function enterPlay() {
   const { dir, wave } = currentSong.value;
   audioRef.value.src = dir + "\\" + wave;
 
-  if (!beatmapViewer) beatmapViewer = new BeatmapViewer(canvasRef.value, audioRef.value);
-  beatmapViewer.init(currentSong.value, currentDifficulty.value);
-  canvasHeight.value = canvasRef.value.height + 1000;
+  if (!gameController) gameController = new GameController(canvasRef.value, audioRef.value);
+  gameController.play(currentSong.value, currentDifficulty.value);
 }
 </script>

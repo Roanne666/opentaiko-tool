@@ -113,6 +113,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
 
 async function backToSongs() {
   isPreview.value = false;
+  
   await new Promise((resolve) => setTimeout(() => resolve(true), 250));
   currentSong.value = undefined;
   if (!audioRef.value) return;

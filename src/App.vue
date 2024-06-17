@@ -35,7 +35,12 @@
 import "@/assets/base.css";
 import { RouterLink, RouterView } from "vue-router";
 import { NLayout, NLayoutSider, NLayoutContent, NMenu, type MenuOption, NIcon } from "naive-ui";
-import { HomeOutline as HomeIcon, MusicalNotesOutline as MusicIcon, BarcodeOutline as PreviewIcon, GameControllerOutline as PlayIcon } from "@vicons/ionicons5";
+import {
+  HomeOutline as HomeIcon,
+  MusicalNotesOutline as MusicIcon,
+  BarcodeOutline as PreviewIcon,
+  GameControllerOutline as GameIcon,
+} from "@vicons/ionicons5";
 import { Edit as EditIcon } from "@vicons/carbon";
 import { h, type Component, Transition } from "vue";
 import { fetchAllSongs } from "@/scripts/stores/song";
@@ -48,7 +53,7 @@ const menuOptions: MenuOption[] = [
   createMenuOption("谱面成绩", "/score", MusicIcon),
   createMenuOption("谱面预览", "/preview", PreviewIcon),
   createMenuOption("谱面编辑", "/edit", EditIcon),
-  createMenuOption("乐曲游玩", "/play", PlayIcon),
+  createMenuOption("乐曲游玩", "/game", GameIcon),
 ];
 
 function createMenuOption(text: string, to: string, icon: Component) {

@@ -6,11 +6,11 @@ import type { Beatmap } from "@/scripts/types";
 import { createBeatmap } from "@/scripts/beatmap/createBeatmap";
 
 export class BeatmapViewer {
-  public canvas: HTMLCanvasElement;
-  public audio: HTMLAudioElement;
+  public readonly canvas: HTMLCanvasElement;
+  public readonly audio: HTMLAudioElement;
 
-  public sourceImage = new Image();
-  public imageUid = -1;
+  private sourceImage = new Image();
+  private imageUid = -1;
 
   constructor(canvas: HTMLCanvasElement, audio: HTMLAudioElement) {
     this.canvas = canvas;
