@@ -107,14 +107,14 @@ export class DrawNoteAction extends DrawAction {
     context.save();
     context.beginPath();
     context.fillStyle = NOTE_BORDER;
-    context.arc(x, y, radius + 2.5, ...angles);
+    context.arc(x, y, radius, ...angles);
     context.fill();
     context.closePath();
 
     // 白边
     context.beginPath();
     context.fillStyle = "white";
-    context.arc(x, y, radius + 1.2, ...angles);
+    context.arc(x, y, radius * 0.9, ...angles);
     context.stroke();
     context.fill();
     context.closePath();
@@ -122,7 +122,7 @@ export class DrawNoteAction extends DrawAction {
     // 音符
     context.beginPath();
     context.fillStyle = color;
-    context.arc(x, y, radius, ...angles);
+    context.arc(x, y, radius * 0.7, ...angles);
     context.fill();
     context.closePath();
     context.restore();

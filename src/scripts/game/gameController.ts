@@ -1,6 +1,4 @@
-import type { Song, DifficlutyType } from "@server/song";
-import { BEAT_PER_ROW, BEAT_WIDTH, PART_BG_COLOR, ROW_HEIGHT } from "@/scripts/beatmap/const";
-import { DrawNoteAction, DrawStrokeAction } from "@/scripts/utils";
+import type { Song, DifficlutyType, DifficultyInfo } from "@server/song";
 import {
   BG_HEIGHT,
   CIRCLE_COLORS,
@@ -16,8 +14,11 @@ import {
   TEXT_ROW_HEIGHT,
   TOP_MARGIN_HEIGHT,
 } from "./const";
+import type { Beatmap } from "../types";
+import { DrawNoteAction, DrawTextAction, parseBeatmap } from "@/scripts/utils";
+import { DON_COLOR, FONT_FAMILY, KA_COLOR, SMALL_NOTE_RADIUS } from "../beatmap/const";
 
-// TODO: 游戏内容比例
+type Note = {};
 
 export class GameController {
   public readonly canvas: HTMLCanvasElement;
@@ -25,6 +26,9 @@ export class GameController {
   public readonly audio: HTMLAudioElement;
 
   private isPlay = false;
+  private listener: ((this: Document, ev: KeyboardEvent) => any) | undefined;
+
+  private notes: Note[] = [];
 
   constructor(canvas: HTMLCanvasElement, audio: HTMLAudioElement) {
     this.canvas = canvas;
@@ -34,6 +38,17 @@ export class GameController {
   }
 
   public async play(song: Song, difficulty: DifficlutyType) {
+    const { dir, wave } = song;
+    this.audio.src = dir + "\\" + wave;
+
+    const difficultyInfo = song.difficulties.find((d) => d.name === difficulty) as DifficultyInfo;
+    const beatmap = parseBeatmap(difficultyInfo.beatmapData);
+    this.listener = (e: KeyboardEvent) => {
+      if (e.key === "d" || e.key === "f") {
+      } else if (e.key === "j" || e.key === "k") {
+      }
+    };
+    document.addEventListener("keypress", this.listener);
     this.isPlay = true;
 
     // 提前绘制画面，并等待两秒给玩家准备时间
@@ -42,11 +57,21 @@ export class GameController {
     if (this.isPlay) {
       this.audio.play();
 
-      this.nextFrame(() => {
+      let lastTime = 0;
+      this.nextFrame((time: number) => {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        if (lastTime === 0) lastTime = time;
+        const fps = Math.round(1 / ((time - lastTime) / 1000));
+        lastTime = time;
+        new DrawTextAction({ font: "16px" + FONT_FAMILY, color: "red", text: `fps: ${fps}`, x: 10, y: 100 }).draw(
+          this.context
+        );
+        this.drawRight();
+
         if (this.audio.paused && this.audio.currentTime > 0) return false;
         if (this.audio.currentTime + song.offset <= 0) return true;
 
-        this.drawRight();
+        this.drawNotes(song, beatmap);
 
         return true;
       });
@@ -54,12 +79,13 @@ export class GameController {
   }
 
   public stop() {
+    if (this.listener) document.removeEventListener("keypress", this.listener);
     this.isPlay = false;
   }
 
-  private nextFrame(callback: () => boolean) {
-    requestAnimationFrame(() => {
-      if (callback()) this.nextFrame(callback);
+  private nextFrame(callback: (time: number) => boolean) {
+    requestAnimationFrame((time: number) => {
+      if (callback(time)) this.nextFrame(callback);
     });
   }
 
@@ -146,4 +172,83 @@ export class GameController {
    * 绘制下侧（小人动画）
    */
   private drawDown() {}
+
+  /**
+   * 绘制音符
+   */
+  private drawNotes(song: Song, beatmap: Beatmap) {
+    const CENTER_OFFSET = this.canvas.height / 2 - BG_HEIGHT;
+    const START_X = LEFT_MARGIN_WIDTH + CIRCLE_MARGIN.INNER[0] + CIRCLE_RADIUS.INNER;
+    const START_Y = CENTER_OFFSET + TOP_MARGIN_HEIGHT;
+    const BEAT_WIDTH = ROW_WIDTH / 4;
+
+    let beatCount = 0;
+
+    // beat per second，每秒经过的节拍
+    let bps = song.bpm / 60;
+
+    // 与4/4拍相对的速度，例如4/16拍则为4倍速
+    let speed = 1;
+
+    // 当前的延迟
+    let delay = 0;
+
+    let time = this.audio.currentTime + song.offset - delay;
+
+    while (time > -1) {
+      const beat = beatmap.beats[beatCount];
+      for (let i = 0; i < beat.length; i++) {
+        const subCount = i / beat.length;
+        const change = beatmap.changes[beatCount + subCount];
+        if (change?.bpm) bps = change.bpm / 60;
+        if (change?.measure) speed = change.measure[1] / 4;
+        if (change?.delay) delay = change.delay;
+
+        const noteTime = 1 / beat.length / bps / speed;
+        time -= noteTime;
+        if (i === beat.length - 1) beatCount += 1;
+        if (time > 1) continue;
+
+        const note = beat[i];
+        const restCount = -time * bps * speed;
+        const NOTE_X = START_X + restCount * BEAT_WIDTH;
+
+        // TODO: 气球和黄条
+        if (note === 0) {
+        } else if (note === 1) {
+          new DrawNoteAction({
+            color: DON_COLOR,
+            x: NOTE_X,
+            y: START_Y + CIRCLE_MARGIN.INNER[1] + CIRCLE_RADIUS.INNER,
+            radius: CIRCLE_RADIUS.INNER,
+            angles: [0, 2 * Math.PI],
+          }).draw(this.context);
+        } else if (note === 2) {
+          new DrawNoteAction({
+            color: KA_COLOR,
+            x: NOTE_X,
+            y: START_Y + CIRCLE_MARGIN.INNER[1] + CIRCLE_RADIUS.INNER,
+            radius: CIRCLE_RADIUS.INNER,
+            angles: [0, 2 * Math.PI],
+          }).draw(this.context);
+        } else if (note === 3) {
+          new DrawNoteAction({
+            color: DON_COLOR,
+            x: NOTE_X,
+            y: START_Y + CIRCLE_MARGIN.OUTER[1] + CIRCLE_RADIUS.OUTER,
+            radius: CIRCLE_RADIUS.OUTER,
+            angles: [0, 2 * Math.PI],
+          }).draw(this.context);
+        } else if (note === 4) {
+          new DrawNoteAction({
+            color: KA_COLOR,
+            x: NOTE_X,
+            y: START_Y + CIRCLE_MARGIN.OUTER[1] + CIRCLE_RADIUS.OUTER,
+            radius: CIRCLE_RADIUS.OUTER,
+            angles: [0, 2 * Math.PI],
+          }).draw(this.context);
+        }
+      }
+    }
+  }
 }

@@ -17,11 +17,15 @@ import {
 } from "./const";
 import { DrawAction, DrawTextAction } from "@/scripts/utils/drawAction";
 import { drawRow, getBeatActions, getLongActions, getMarkActions, getNoteAction } from "@/scripts/beatmap/draw";
-import { getBeatmapRows } from "@/scripts/beatmap/utils";
-import { parseBeatmap } from "@/scripts/beatmap/parser";
+import { getBeatmapRows, parseBeatmap } from "@/scripts/utils";
 import type { BeatPos, Beatmap, ImageData, Measure } from "@/scripts/types";
 
-export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty: DifficlutyType, ignoreHs = false): { beatmap: Beatmap; imageData: ImageData } {
+export function createBeatmap(
+  canvas: HTMLCanvasElement,
+  song: Song,
+  difficulty: DifficlutyType,
+  ignoreHs = false
+): { beatmap: Beatmap; imageData: ImageData } {
   const context = canvas.getContext("2d") as CanvasRenderingContext2D;
   const difficultyInfo = song.difficulties.find((d) => d.name === difficulty) as DifficultyInfo;
 
@@ -140,7 +144,9 @@ export function createBeatmap(canvas: HTMLCanvasElement, song: Song, difficulty:
         // 根据bpm和scroll变化绘制标记
         if (ignoreHs) subChange.hs = undefined;
         if (currentTotalBeatCount === 0) subChange.bpm = bpm;
-        markActions.push(...getMarkActions(currentBar + 1, currentBarBeatCount, currentRow, rowBeatCount + subBeatCount, subChange));
+        markActions.push(
+          ...getMarkActions(currentBar + 1, currentBarBeatCount, currentRow, rowBeatCount + subBeatCount, subChange)
+        );
       }
 
       const note = notes[j];

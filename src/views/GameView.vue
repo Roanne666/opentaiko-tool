@@ -30,7 +30,7 @@
 
   <transition v-show="isPlay" name="slide-fade">
     <n-flex justify="center">
-      <canvas ref="canvasRef" width="1200" height="1200" />
+      <canvas ref="canvasRef" width="1200" height="1000" style="scale: 0.7" />
     </n-flex>
   </transition>
 
@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import { Transition, h, ref } from "vue";
-import { NButton, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex, NScrollbar, NBackTop } from "naive-ui";
+import { NButton, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex } from "naive-ui";
 import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
 import type { DifficlutyType, Song } from "@server/song";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
@@ -122,9 +122,6 @@ async function enterPlay() {
   if (!currentSong.value) return;
   if (!audioRef.value) return;
   if (!canvasRef.value) return;
-
-  // const { dir, wave } = currentSong.value;
-  // audioRef.value.src = dir + "\\" + wave;
 
   if (!gameController) gameController = new GameController(canvasRef.value, audioRef.value);
   gameController.play(currentSong.value, currentDifficulty.value);

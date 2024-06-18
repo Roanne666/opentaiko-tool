@@ -1,7 +1,7 @@
 import type { DifficlutyType, Song } from "@server/song";
 import { BEAT_WIDTH, MARGIN_X, MARGIN_Y, ROW_HEIGHT, ROW_SPACE } from "@/scripts/beatmap/const";
 import { DrawStrokeAction } from "@/scripts/utils";
-import { getBeatmapRows } from "@/scripts/beatmap/utils";
+import { getBeatmapRows } from "@/scripts/utils";
 import type { Beatmap } from "@/scripts/types";
 import { createBeatmap } from "@/scripts/beatmap/createBeatmap";
 
