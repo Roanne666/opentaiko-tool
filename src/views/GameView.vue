@@ -29,13 +29,8 @@
   </transition>
 
   <transition v-show="isPlay" name="slide-fade">
-    <n-flex vertical justify="center">
-      <n-scrollbar style="max-height: 90vh">
-        <n-flex justify="center">
-          <canvas ref="canvasRef" width="1200" height="1200" />
-        </n-flex>
-        <n-back-top :right="100" :bottom="20" />
-      </n-scrollbar>
+    <n-flex justify="center">
+      <canvas ref="canvasRef" width="1200" height="1200" />
     </n-flex>
   </transition>
 
@@ -112,7 +107,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
 
 async function backToSongs() {
   isPlay.value = false;
-  gameController?.stop()
+  gameController?.stop();
   await new Promise((resolve) => setTimeout(() => resolve(true), 250));
   isInGame.value = false;
   currentSong.value = undefined;
@@ -128,8 +123,8 @@ async function enterPlay() {
   if (!audioRef.value) return;
   if (!canvasRef.value) return;
 
-  const { dir, wave } = currentSong.value;
-  audioRef.value.src = dir + "\\" + wave;
+  // const { dir, wave } = currentSong.value;
+  // audioRef.value.src = dir + "\\" + wave;
 
   if (!gameController) gameController = new GameController(canvasRef.value, audioRef.value);
   gameController.play(currentSong.value, currentDifficulty.value);
