@@ -47,11 +47,11 @@
 import { Transition, h, ref } from "vue";
 import { NButton, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex } from "naive-ui";
 import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
-import type { DifficlutyType, Song } from "@server/song";
+import type { DifficlutyType, Song } from "@server/types";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import SongTable from "@/components/SongTable.vue";
 import { isInGame } from "@/scripts/stores/global";
-import { GameController } from "@/scripts/game/gameController";
+import { GameController } from "@/scripts/game";
 
 const canvasRef = ref<HTMLCanvasElement>();
 const audioRef = ref<HTMLAudioElement>();

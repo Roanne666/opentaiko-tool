@@ -12,10 +12,18 @@ import { getNoteAction } from "@/scripts/beatmap/draw/note";
  * @param radiusType 半径类型，区分大小音符
  * @param balloonNum 气球数
  */
-export function getLongActions(options: { x: number; y: number; interval: number; color: string; radius: number; drawType: "start" | "middle" | "end" }) {
+export function getLongActions(options: {
+  x: number;
+  y: number;
+  interval: number;
+  color: string;
+  radius: number;
+  drawType: "start" | "middle" | "end";
+}) {
   const { x, y, interval, color, drawType, radius } = options;
 
   const actions: DrawAction[] = [];
+
   if (drawType === "start") {
     const noteAction = getNoteAction(x, y, color, radius, "left");
     actions.push(noteAction);
@@ -29,46 +37,39 @@ export function getLongActions(options: { x: number; y: number; interval: number
     actions.push(noteAction);
   }
 
+  actions.push(new DrawRectAction({ color, x: x - 1, y: y - radius * 0.7, width: 1, height: radius * 2 * 0.7 }));
+
   return actions;
 }
 
 // 把长条的中间间隔填满
 function getFillActions(x: number, y: number, color: string, interval: number, radius: number) {
-  const actions: DrawAction[] = [];
-  actions.push(new DrawRectAction({ color, x: x - 1, y: y - radius, width: interval + 2, height: radius * 2 }));
-
   // 上下黑边
-  actions.push(
-    new DrawRectAction({
-      color: NOTE_BORDER,
-      x: x,
-      y: y - radius - 2.5,
-      width: interval,
-      height: radius * 2 + 5,
-    })
-  );
+  const blackBorderAction = new DrawRectAction({
+    color: NOTE_BORDER,
+    x: x,
+    y: y - radius,
+    width: interval,
+    height: radius * 2,
+  });
 
   // 上下白边
-  actions.push(
-    new DrawRectAction({
-      color: "white",
-      x: x,
-      y: y - radius - 1.2,
-      width: interval,
-      height: radius * 2 + 2.4,
-    })
-  );
+  const whiteBorderAction = new DrawRectAction({
+    color: "white",
+    x: x,
+    y: y - radius * 0.9,
+    width: interval,
+    height: radius * 2 * 0.9,
+  });
 
   // 音符颜色
-  actions.push(
-    new DrawRectAction({
-      color,
-      x: x,
-      y: y - radius,
-      width: interval,
-      height: radius * 2,
-    })
-  );
+  const noteColorAction = new DrawRectAction({
+    color,
+    x: x,
+    y: y - radius * 0.7,
+    width: interval,
+    height: radius * 2 * 0.7,
+  });
 
-  return actions;
+  return [blackBorderAction, whiteBorderAction, noteColorAction];
 }

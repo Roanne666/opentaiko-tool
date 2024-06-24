@@ -83,12 +83,12 @@ export const GOGOTIME_BG_COLOR = "rgb(255,192,192)";
 /**
  * 小音符的尺寸
  */
-export const SMALL_NOTE_RADIUS = 8.3;
+export const SMALL_NOTE_RADIUS = 10.67;
 
 /**
  * 大音符的尺寸
  */
-export const BIG_NOTE_RADIUS = 11;
+export const BIG_NOTE_RADIUS = 14.2;
 
 // ------ 字体 ------
 export const FONT_FAMILY = ' "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif';

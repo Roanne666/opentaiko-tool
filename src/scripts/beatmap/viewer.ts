@@ -1,4 +1,4 @@
-import type { DifficlutyType, Song } from "@server/song";
+import type { DifficlutyType, Song } from "@server/types";
 import { BEAT_WIDTH, MARGIN_X, MARGIN_Y, ROW_HEIGHT, ROW_SPACE } from "@/scripts/beatmap/const";
 import { DrawStrokeAction } from "@/scripts/utils";
 import { getBeatmapRows } from "@/scripts/utils";
@@ -17,8 +17,8 @@ export class BeatmapViewer {
     this.audio = audio;
   }
 
-  public init(song: Song, difficulty: DifficlutyType) {
-    const { beatmap, imageData } = createBeatmap(this.canvas, song, difficulty);
+  public init(song: Song, difficulty: DifficlutyType, ignoreMark = false) {
+    const { beatmap, imageData } = createBeatmap(this.canvas, song, difficulty, ignoreMark);
 
     this.sourceImage.src = imageData.data;
     this.imageUid = imageData.uid;

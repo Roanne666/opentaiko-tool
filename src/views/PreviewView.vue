@@ -53,7 +53,7 @@
 import { Transition, h, ref } from "vue";
 import { NButton, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex, NScrollbar, NBackTop } from "naive-ui";
 import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
-import type { DifficlutyType, Song } from "@server/song";
+import type { DifficlutyType, Song } from "@server/types";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import SongTable from "@/components/SongTable.vue";
 import { BeatmapViewer } from "@/scripts/beatmap/viewer";
@@ -113,7 +113,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
 
 async function backToSongs() {
   isPreview.value = false;
-  
+
   await new Promise((resolve) => setTimeout(() => resolve(true), 250));
   currentSong.value = undefined;
   if (!audioRef.value) return;
@@ -132,7 +132,7 @@ async function enterPreview() {
   audioRef.value.src = dir + "\\" + wave;
 
   if (!beatmapViewer) beatmapViewer = new BeatmapViewer(canvasRef.value, audioRef.value);
-  beatmapViewer.init(currentSong.value, currentDifficulty.value);
+  beatmapViewer.init(currentSong.value, currentDifficulty.value, true);
   canvasHeight.value = canvasRef.value.height + 1000;
 }
 </script>

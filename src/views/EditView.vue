@@ -31,12 +31,25 @@
   <transition v-show="isEdit" name="slide-fade">
     <n-flex>
       <n-flex vertical style="width: 450px; margin-left: 50px">
-        <n-input type="textarea" placeholder="请输入谱面内容" :resizable="false" v-model:value="beatmapInput" @input="updateBeatmap" style="height: 90vh" />
+        <n-input
+          type="textarea"
+          placeholder="请输入谱面内容"
+          :resizable="false"
+          v-model:value="beatmapInput"
+          @input="updateBeatmap"
+          style="height: 90vh"
+        />
         <n-flex style="margin-top: 10px" justify="center">
           <n-button :disabled="isUpdating" @click="saveSong" style="margin-top: -5px">保存谱面</n-button>
           <n-divider vertical style="height: 100%" />
           <span>预览延迟：</span>
-          <n-slider v-model:value="previewDelay" :step="0.1" :max="2" :min="0.5" style="width: 200px; padding-top: 10px" />
+          <n-slider
+            v-model:value="previewDelay"
+            :step="0.1"
+            :max="2"
+            :min="0.5"
+            style="width: 200px; padding-top: 10px"
+          />
         </n-flex>
       </n-flex>
 
@@ -63,9 +76,20 @@
 
 <script setup lang="ts">
 import { Transition, h, ref } from "vue";
-import { NButton, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex, NScrollbar, NBackTop, NInput, NSlider, NDivider } from "naive-ui";
+import {
+  NButton,
+  NIcon,
+  type DataTableColumn,
+  type DataTableColumnGroup,
+  NFlex,
+  NScrollbar,
+  NBackTop,
+  NInput,
+  NSlider,
+  NDivider,
+} from "naive-ui";
 import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
-import type { DifficlutyType, DifficultyInfo, Song } from "@server/song";
+import type { DifficlutyType, DifficultyInfo, Song } from "@server/types";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import SongTable from "@/components/SongTable.vue";
 import { Throttler } from "@/scripts/utils";

@@ -30,7 +30,7 @@
 <script setup lang="ts">
 import { type DataTableColumn, type DataTableColumnGroup, NFlex } from "naive-ui";
 import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
-import type { DifficlutyType, Song } from "@server/song";
+import type { DifficlutyType, Song } from "@server/types";
 import SongTable from "@/components/SongTable.vue";
 
 const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [

@@ -1,4 +1,4 @@
-import type { DifficultyInfo } from "@server/song";
+import type { DifficultyInfo } from "@server/types";
 import { BEATMAP_BG_COLOR, SONG_NAME_FONT, DIFFICULTY_FONT, LEVEL_FONT } from "@/scripts/beatmap/const";
 
 const difficultyNames = {

@@ -1,5 +1,5 @@
 import { statSync } from "fs";
-import { Song } from "./song";
+import { Song } from "./types";
 
 export async function isDir(path: string) {
   return new Promise<boolean>(async (resolve) => {
