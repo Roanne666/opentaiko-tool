@@ -24,9 +24,11 @@
     </transition>
 
     <n-layout>
-      <n-layout-content content-style="padding-left: 24px;padding-right:24px;height:100vh">
-        <RouterView />
-      </n-layout-content>
+      <n-message-provider>
+        <n-layout-content content-style="padding-left: 24px;padding-right:24px;height:100vh">
+          <RouterView />
+        </n-layout-content>
+      </n-message-provider>
     </n-layout>
   </n-layout>
 </template>
@@ -34,7 +36,7 @@
 <script setup lang="ts">
 import "@/assets/base.css";
 import { RouterLink, RouterView } from "vue-router";
-import { NLayout, NLayoutSider, NLayoutContent, NMenu, type MenuOption, NIcon } from "naive-ui";
+import { NLayout, NLayoutSider, NLayoutContent, NMenu, type MenuOption, NIcon, NMessageProvider } from "naive-ui";
 import {
   HomeOutline as HomeIcon,
   MusicalNotesOutline as MusicIcon,

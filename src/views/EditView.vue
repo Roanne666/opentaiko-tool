@@ -29,7 +29,7 @@
   </transition>
 
   <transition v-show="isEdit" name="slide-fade">
-    <n-flex>
+    <n-flex justify="center">
       <n-flex vertical style="width: 450px; margin-left: 50px">
         <n-input
           type="textarea"
@@ -87,6 +87,7 @@ import {
   NInput,
   NSlider,
   NDivider,
+  useMessage,
 } from "naive-ui";
 import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
 import type { DifficlutyType, DifficultyInfo, Song } from "@server/types";
@@ -94,6 +95,7 @@ import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import SongTable from "@/components/SongTable.vue";
 import { Throttler } from "@/scripts/utils";
 import { BeatmapViewer } from "@/scripts/beatmap/viewer";
+import { isInGame } from "@/scripts/stores/global";
 
 const canvasRef = ref<HTMLCanvasElement>();
 const audioRef = ref<HTMLAudioElement>();
@@ -141,6 +143,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
                   currentSong.value = row;
                   currentDifficulty.value = key;
                   beatmapInput.value = d.beatmapData.join("\n");
+                  isInGame.value = true;
                 },
               },
               () => "编辑"
@@ -155,6 +158,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
 
 async function backToSongs() {
   isEdit.value = false;
+  isInGame.value = false;
   await new Promise((resolve) => setTimeout(() => resolve(true), 250));
   currentSong.value = undefined;
   if (!audioRef.value) return;
@@ -195,6 +199,7 @@ async function updateBeatmap() {
   }
 }
 
+const message = useMessage();
 async function saveSong() {
   const response = await fetch("/api/modifySong", {
     method: "POST",
@@ -212,9 +217,9 @@ async function saveSong() {
   const status = await response.json();
   // TODO: popup message
   if (status) {
-    console.log(true);
+    message.success("保存成功");
   } else {
-    console.log(false);
+    message.success("保存失败，请手动保存");
   }
 }
 </script>
