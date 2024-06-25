@@ -17,7 +17,7 @@
 
 <template>
   <n-layout has-sider style="padding-top: 20px; height: 99vh">
-    <transition v-show="!isInGame" name="sider">
+    <transition v-show="!hideSideBar" name="sider">
       <n-layout-sider bordered width="220" content-style="padding-left: 24px;padding-right:10px">
         <n-menu :options="menuOptions" default-value="score" />
       </n-layout-sider>
@@ -46,7 +46,7 @@ import {
 import { Edit as EditIcon } from "@vicons/carbon";
 import { h, type Component, Transition } from "vue";
 import { fetchAllSongs } from "@/scripts/stores/song";
-import { isInGame } from "./scripts/stores/global";
+import { hideSideBar } from "./scripts/stores/global";
 
 fetchAllSongs();
 

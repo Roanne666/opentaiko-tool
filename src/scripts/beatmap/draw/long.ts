@@ -37,8 +37,6 @@ export function getLongActions(options: {
     actions.push(noteAction);
   }
 
-  actions.push(new DrawRectAction({ color, x: x - 1, y: y - radius * 0.7, width: 1, height: radius * 2 * 0.7 }));
-
   return actions;
 }
 
@@ -47,27 +45,27 @@ function getFillActions(x: number, y: number, color: string, interval: number, r
   // 上下黑边
   const blackBorderAction = new DrawRectAction({
     color: NOTE_BORDER,
-    x: x,
+    x: x - 1,
     y: y - radius,
-    width: interval,
+    width: interval + 2,
     height: radius * 2,
   });
 
   // 上下白边
   const whiteBorderAction = new DrawRectAction({
     color: "white",
-    x: x,
+    x: x - 2,
     y: y - radius * 0.9,
-    width: interval,
+    width: interval + 4,
     height: radius * 2 * 0.9,
   });
 
   // 音符颜色
   const noteColorAction = new DrawRectAction({
     color,
-    x: x,
+    x: x - 2,
     y: y - radius * 0.7,
-    width: interval,
+    width: interval + 4,
     height: radius * 2 * 0.7,
   });
 

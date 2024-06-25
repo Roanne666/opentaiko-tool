@@ -17,8 +17,11 @@ export class BeatmapViewer {
     this.audio = audio;
   }
 
-  public init(song: Song, difficulty: DifficlutyType, ignoreMark = false) {
-    const { beatmap, imageData } = createBeatmap(this.canvas, song, difficulty, ignoreMark);
+  public init(song: Song, difficulty: DifficlutyType, options: string[]) {
+    const showBar = options.includes("bar");
+    const showBpm = options.includes("bpm");
+    const showHs = options.includes("hs");
+    const { beatmap, imageData } = createBeatmap(this.canvas, song, difficulty, { showBar, showBpm, showHs });
 
     this.sourceImage.src = imageData.data;
     this.imageUid = imageData.uid;

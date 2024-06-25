@@ -22,15 +22,23 @@
 </style>
 
 <template>
-  <transition v-show="!currentSong" @after-leave="enterEdit" name="slide-fade">
+  <transition v-show="!currentSong" @after-leave="isEdit = true" name="slide-fade">
     <n-flex vertical justify="center">
-      <song-table :use-score="false" :columns="columns"></song-table>
+      <song-table
+        :use-score="false"
+        :columns="columns"
+        @change-options="
+          (options) => {
+            showOptions = options;
+          }
+        "
+      ></song-table>
     </n-flex>
   </transition>
 
   <transition v-show="isEdit" name="slide-fade">
     <n-flex justify="center">
-      <n-flex vertical style="width: 450px; margin-left: 50px">
+      <n-flex vertical style="width: 450px; margin-left: 50px; margin-right: 20px">
         <n-input
           type="textarea"
           placeholder="请输入谱面内容"
@@ -45,25 +53,21 @@
           <span>预览延迟：</span>
           <n-slider
             v-model:value="previewDelay"
-            :step="0.1"
+            :step="0.5"
             :max="2"
-            :min="0.5"
+            :min="0"
             style="width: 200px; padding-top: 10px"
           />
         </n-flex>
       </n-flex>
 
-      <n-flex vertical>
-        <n-scrollbar style="max-height: 90vh; width: 1100px">
-          <n-flex justify="center">
-            <canvas ref="canvasRef" width="1080" height="1200"></canvas>
-          </n-flex>
-          <n-back-top :right="50" :bottom="20" />
-        </n-scrollbar>
-        <n-flex justify="center">
-          <audio ref="audioRef" controls oncontextmenu="return false" controlslist="nodownload" style="width: 1000px" />
-        </n-flex>
-      </n-flex>
+      <preview-canvas
+        :current-song="currentSong"
+        :current-difficulty="currentDifficulty"
+        :back-top-right="50"
+        :updateCount="updateCount"
+        :showOptions="showOptions"
+      ></preview-canvas>
     </n-flex>
   </transition>
 
@@ -82,8 +86,6 @@ import {
   type DataTableColumn,
   type DataTableColumnGroup,
   NFlex,
-  NScrollbar,
-  NBackTop,
   NInput,
   NSlider,
   NDivider,
@@ -94,20 +96,16 @@ import type { DifficlutyType, DifficultyInfo, Song } from "@server/types";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import SongTable from "@/components/SongTable.vue";
 import { Throttler } from "@/scripts/utils";
-import { BeatmapViewer } from "@/scripts/beatmap/viewer";
-import { isInGame } from "@/scripts/stores/global";
-
-const canvasRef = ref<HTMLCanvasElement>();
-const audioRef = ref<HTMLAudioElement>();
-
-const canvasHeight = ref(1200);
+import { hideSideBar } from "@/scripts/stores/global";
+import PreviewCanvas from "@/components/PreviewCanvas.vue";
 
 const currentSong = ref<Song>();
 const currentDifficulty = ref<DifficlutyType>("oni");
+const updateCount = ref(0);
+const showOptions = ref<string[]>([]);
 
 const isEdit = ref(false);
 
-let beatmapViewer: BeatmapViewer | undefined = undefined;
 const beatmapInput = ref("");
 const previewDelay = ref(1);
 const isUpdating = ref(false);
@@ -143,7 +141,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
                   currentSong.value = row;
                   currentDifficulty.value = key;
                   beatmapInput.value = d.beatmapData.join("\n");
-                  isInGame.value = true;
+                  hideSideBar.value = true;
                 },
               },
               () => "编辑"
@@ -158,26 +156,10 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
 
 async function backToSongs() {
   isEdit.value = false;
-  isInGame.value = false;
+  hideSideBar.value = false;
   await new Promise((resolve) => setTimeout(() => resolve(true), 250));
   currentSong.value = undefined;
-  if (!audioRef.value) return;
-  audioRef.value.pause();
-  audioRef.value.currentTime = 0;
-}
-
-// 提前绘制谱面和获取音频时长
-async function enterEdit() {
-  isEdit.value = true;
-  if (!currentSong.value) return;
-  if (!audioRef.value) return;
-  if (!canvasRef.value) return;
-  const { dir, wave } = currentSong.value;
-  audioRef.value.src = dir + "\\" + wave;
-
-  if (!beatmapViewer) beatmapViewer = new BeatmapViewer(canvasRef.value, audioRef.value);
-  beatmapViewer.init(currentSong.value, currentDifficulty.value);
-  canvasHeight.value = canvasRef.value.height + 1000;
+  updateCount.value = 0;
 }
 
 const throttle = new Throttler(previewDelay);
@@ -186,15 +168,11 @@ async function updateBeatmap() {
   const status = await throttle.update();
   if (status) {
     if (!currentSong.value) return;
-    if (!audioRef.value) return;
-    if (!canvasRef.value) return;
 
     const d = currentSong.value.difficulties.find((d) => d.name === currentDifficulty.value) as DifficultyInfo;
     d.beatmapData = beatmapInput.value.split("\n");
 
-    if (!beatmapViewer) beatmapViewer = new BeatmapViewer(canvasRef.value, audioRef.value);
-    beatmapViewer.init(currentSong.value, currentDifficulty.value);
-    canvasHeight.value = canvasRef.value.height + 1000;
+    updateCount.value += 1;
     isUpdating.value = false;
   }
 }
@@ -215,7 +193,6 @@ async function saveSong() {
   });
 
   const status = await response.json();
-  // TODO: popup message
   if (status) {
     message.success("保存成功");
   } else {

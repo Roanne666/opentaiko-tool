@@ -24,7 +24,7 @@ export function createBeatmap(
   canvas: HTMLCanvasElement,
   song: Song,
   difficulty: DifficlutyType,
-  ignoreMark = false
+  options: { showBar: boolean; showBpm: boolean; showHs: boolean }
 ): { beatmap: Beatmap; imageData: ImageData } {
   const context = canvas.getContext("2d") as CanvasRenderingContext2D;
   const difficultyInfo = song.difficulties.find((d) => d.name === difficulty) as DifficultyInfo;
@@ -59,7 +59,6 @@ export function createBeatmap(
   let newRow = true;
 
   let bpm = song.bpm;
-  let hs = 1;
   let measure: Measure = [4, 4];
   let gogotime = false;
   // TODO: 小节线显示问题（不一定会加入该功能）
@@ -96,7 +95,6 @@ export function createBeatmap(
       const change = { ...beatmap.changes[totalBeatCount] };
       if (change.measure) measure = change.measure;
       if (change.bpm) bpm = change.bpm;
-      if (change.hs) hs = change.hs;
       if (change.delay) delay = change.delay;
       if (change.barline !== undefined) barline = change.barline;
       if (change.gogotime !== undefined) gogotime = change.gogotime;
@@ -135,7 +133,6 @@ export function createBeatmap(
       if (subChange) {
         if (subChange.measure) measure = subChange.measure;
         if (subChange.bpm) bpm = subChange.bpm;
-        if (subChange.hs) hs = subChange.hs;
         if (subChange.delay) delay = subChange.delay;
         if (subChange.barline !== undefined) barline = subChange.barline;
         if (subChange.gogotime !== undefined) gogotime = subChange.gogotime;
@@ -143,13 +140,18 @@ export function createBeatmap(
         const currentBarBeatCount = barBeatCount + subBeatCount;
         // 根据bpm和scroll变化绘制标记
         if (noteBeatCount === 0) subChange.bpm = bpm;
-        if (ignoreMark) {
-          subChange.hs = undefined;
-          subChange.bpm = undefined;
-        }
-        
+        if (!options.showBpm) subChange.bpm = undefined;
+        if (!options.showHs) subChange.hs = undefined;
+
         markActions.push(
-          ...getMarkActions(currentBar + 1, currentBarBeatCount, currentRow, rowBeatCount + subBeatCount, subChange)
+          ...getMarkActions({
+            bar: currentBar + 1,
+            barBeatCount: currentBarBeatCount,
+            row: currentRow,
+            rowBeatCount: rowBeatCount + subBeatCount,
+            showBar: options.showBar,
+            change: subChange,
+          })
         );
       }
 

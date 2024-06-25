@@ -9,7 +9,7 @@ import {
   LIGHT_LINE_COLOR,
   MARK_FONT,
 } from "@/scripts/beatmap/const";
-import { DrawRectAction, DrawStrokeAction, DrawTextAction, type DrawAction } from "@/scripts/utils/drawAction";
+import { DrawRectAction, DrawStrokeAction, type DrawAction } from "@/scripts/utils/drawAction";
 import type { BeatPos, Change } from "@/scripts/types";
 
 /**
