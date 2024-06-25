@@ -22,24 +22,27 @@
 </style>
 
 <template>
-  <transition v-show="!currentSong" @after-leave="enterPreview" name="slide-fade">
+  <transition v-show="!currentSong" @after-leave="isPreview = true" name="slide-fade">
     <n-flex vertical justify="center">
-      <song-table :use-score="false" :columns="columns"></song-table>
+      <song-table
+        :use-score="false"
+        :columns="columns"
+        @change-options="
+          (options) => {
+            showOptions = options;
+          }
+        "
+      />
     </n-flex>
   </transition>
 
   <transition v-show="isPreview" name="slide-fade">
-    <n-flex vertical justify="center">
-      <n-scrollbar style="max-height: 90vh">
-        <n-flex justify="center">
-          <canvas ref="canvasRef" width="1080" height="1200"></canvas>
-        </n-flex>
-        <n-back-top :right="100" :bottom="20" />
-      </n-scrollbar>
-      <n-flex justify="center">
-        <audio ref="audioRef" controls oncontextmenu="return false" controlslist="nodownload" style="width: 1000px" />
-      </n-flex>
-    </n-flex>
+    <preview-canvas
+      :current-song="currentSong"
+      :current-difficulty="currentDifficulty"
+      :backTopRight="100"
+      :showOptions="showOptions"
+    ></preview-canvas>
   </transition>
 
   <transition v-show="isPreview" name="slide-fade">
@@ -51,22 +54,17 @@
 
 <script setup lang="ts">
 import { Transition, h, ref } from "vue";
-import { NButton, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex, NScrollbar, NBackTop } from "naive-ui";
+import { NButton, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex } from "naive-ui";
 import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
-import type { DifficlutyType, Song } from "@server/song";
+import type { DifficlutyType, Song } from "@server/types";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import SongTable from "@/components/SongTable.vue";
-import { BeatmapViewer } from "@/scripts/beatmap/viewer";
-
-const canvasRef = ref<HTMLCanvasElement>();
-const audioRef = ref<HTMLAudioElement>();
-
-const canvasHeight = ref(1200);
+import PreviewCanvas from "@/components/PreviewCanvas.vue";
 
 const currentSong = ref<Song>();
 const currentDifficulty = ref<DifficlutyType>("oni");
 
-let beatmapViewer: BeatmapViewer | undefined;
+const showOptions = ref<string[]>([]);
 const isPreview = ref(false);
 
 const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
@@ -113,26 +111,7 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
 
 async function backToSongs() {
   isPreview.value = false;
-  
   await new Promise((resolve) => setTimeout(() => resolve(true), 250));
   currentSong.value = undefined;
-  if (!audioRef.value) return;
-  audioRef.value.pause();
-  audioRef.value.currentTime = 0;
-}
-
-// 提前绘制谱面和获取音频时长
-async function enterPreview() {
-  isPreview.value = true;
-  if (!currentSong.value) return;
-  if (!audioRef.value) return;
-  if (!canvasRef.value) return;
-
-  const { dir, wave } = currentSong.value;
-  audioRef.value.src = dir + "\\" + wave;
-
-  if (!beatmapViewer) beatmapViewer = new BeatmapViewer(canvasRef.value, audioRef.value);
-  beatmapViewer.init(currentSong.value, currentDifficulty.value);
-  canvasHeight.value = canvasRef.value.height + 1000;
 }
 </script>

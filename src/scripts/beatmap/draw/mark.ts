@@ -8,10 +8,19 @@ import type { Change } from "@/scripts/types";
  * @param gridInfo
  * @param options
  */
-export function getMarkActions(bar: number, barBeatCount: number, row: number, rowBeatCount: number, change?: Change) {
+export function getMarkActions(options: {
+  bar: number;
+  barBeatCount: number;
+  row: number;
+  rowBeatCount: number;
+  showBar: boolean;
+  change?: Change;
+}) {
+  const { bar, barBeatCount, row, rowBeatCount, showBar, change } = options;
+
   const actions: DrawTextAction[] = [];
 
-  if (barBeatCount === 0) {
+  if (barBeatCount === 0 && showBar) {
     const action = new DrawTextAction({
       font: MARK_FONT,
       color: "black",

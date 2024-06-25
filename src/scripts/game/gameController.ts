@@ -1,4 +1,4 @@
-import type { Song, DifficlutyType, DifficultyInfo } from "@server/song";
+import type { Song, DifficlutyType, DifficultyInfo } from "@server/types";
 import {
   BG_HEIGHT,
   CIRCLE_COLORS,
@@ -14,9 +14,9 @@ import {
   TEXT_ROW_HEIGHT,
   TOP_MARGIN_HEIGHT,
 } from "./const";
-import type { Beatmap } from "../types";
+import type { Beatmap } from "@/scripts/types";
 import { DrawNoteAction, DrawTextAction, parseBeatmap } from "@/scripts/utils";
-import { DON_COLOR, FONT_FAMILY, KA_COLOR, SMALL_NOTE_RADIUS } from "../beatmap/const";
+import { DON_COLOR, FONT_FAMILY, KA_COLOR } from "@/scripts/beatmap/const";
 
 type Note = {};
 
@@ -27,8 +27,6 @@ export class GameController {
 
   private isPlay = false;
   private listener: ((this: Document, ev: KeyboardEvent) => any) | undefined;
-
-  private notes: Note[] = [];
 
   constructor(canvas: HTMLCanvasElement, audio: HTMLAudioElement) {
     this.canvas = canvas;
@@ -190,17 +188,20 @@ export class GameController {
     // 与4/4拍相对的速度，例如4/16拍则为4倍速
     let speed = 1;
 
+    let hs = 1;
+
     // 当前的延迟
     let delay = 0;
 
     let time = this.audio.currentTime + song.offset - delay;
 
-    while (time > -1) {
+    while (time > -5) {
       const beat = beatmap.beats[beatCount];
       for (let i = 0; i < beat.length; i++) {
         const subCount = i / beat.length;
         const change = beatmap.changes[beatCount + subCount];
         if (change?.bpm) bps = change.bpm / 60;
+        if (change?.hs) hs = change.hs;
         if (change?.measure) speed = change.measure[1] / 4;
         if (change?.delay) delay = change.delay;
 
@@ -211,7 +212,7 @@ export class GameController {
 
         const note = beat[i];
         const restCount = -time * bps * speed;
-        const NOTE_X = START_X + restCount * BEAT_WIDTH;
+        const NOTE_X = START_X + restCount * BEAT_WIDTH * hs;
 
         // TODO: 气球和黄条
         if (note === 0) {

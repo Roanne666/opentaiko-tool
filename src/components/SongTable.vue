@@ -2,7 +2,7 @@
   <div>
     <n-checkbox-group v-model:value="genreSelect">
       <n-space item-style="display: flex;">
-        <span>类目：</span>
+        <span style="margin-right: -2px">类目：</span>
         <n-checkbox v-for="g of genres" :value="g" :label="g" />
       </n-space>
     </n-checkbox-group>
@@ -38,6 +38,16 @@
       </n-space>
     </n-radio-group>
   </div>
+  <div>
+    <n-checkbox-group v-model:value="options">
+      <n-space item-style="display: flex;">
+        <span style="margin-right: -2px">设置：</span>
+        <n-checkbox value="bar" label="显示小节数" />
+        <n-checkbox value="bpm" label="显示bpm" />
+        <n-checkbox value="hs" label="显示hs" />
+      </n-space>
+    </n-checkbox-group>
+  </div>
 
   <n-data-table
     :columns="props.columns"
@@ -54,9 +64,27 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
-import { NCheckboxGroup, NSpace, NCheckbox, NRadioGroup, NRadio, NDataTable, type DataTableColumn, type DataTableColumnGroup } from "naive-ui";
-import { allSongs, genres, levels, scores, showSongs, type DifficultyTypes, type LevelTypes, type ScoreTypes } from "@/scripts/stores/song";
-import type { Song } from "@server/song";
+import {
+  NCheckboxGroup,
+  NSpace,
+  NCheckbox,
+  NRadioGroup,
+  NRadio,
+  NDataTable,
+  type DataTableColumn,
+  type DataTableColumnGroup,
+} from "naive-ui";
+import {
+  allSongs,
+  genres,
+  levels,
+  scores,
+  showSongs,
+  type DifficultyTypes,
+  type LevelTypes,
+  type ScoreTypes,
+} from "@/scripts/stores/song";
+import type { Song } from "@server/types";
 
 const props = defineProps<{
   useScore: boolean;
@@ -67,10 +95,17 @@ const genreSelect = ref(genres);
 const difficultySelect = ref<DifficultyTypes>("all");
 const levelSelect = ref<LevelTypes>(0);
 const scoreSelcet = ref<ScoreTypes>("全部");
+const options = ref<string[]>(["bar"]);
+
+const emit = defineEmits<{ changeOptions: [options: string[]] }>();
 
 onMounted(() => {
   showSongs.length = 0;
   showSongs.push(...allSongs);
+});
+
+watch(options, () => {
+  emit("changeOptions", options.value);
 });
 
 watch([genreSelect, difficultySelect, levelSelect, scoreSelcet], () => {
@@ -85,7 +120,11 @@ watch([genreSelect, difficultySelect, levelSelect, scoreSelcet], () => {
 
       let scoreMatch = scoreSelcet.value === "全部";
       if (!scoreMatch) {
-        scoreMatch = s.difficulties.find((d) => d.score >= scores[scoreSelcet.value][0] && d.score < scores[scoreSelcet.value][1]) ? true : false;
+        scoreMatch = s.difficulties.find(
+          (d) => d.score >= scores[scoreSelcet.value][0] && d.score < scores[scoreSelcet.value][1]
+        )
+          ? true
+          : false;
       }
 
       isMatch = levelMatch && scoreMatch;

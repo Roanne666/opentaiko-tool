@@ -1,4 +1,4 @@
-import type { DifficlutyType, Song } from "@server/song";
+import type { DifficlutyType, Song } from "@server/types";
 import type { DataTableColumn, DataTableColumnGroup } from "naive-ui";
 import type { TableBaseColumn } from "naive-ui/es/data-table/src/interface";
 import { reactive } from "vue";

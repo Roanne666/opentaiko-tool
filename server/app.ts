@@ -2,10 +2,11 @@ import { exec } from "child_process";
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import type { AddressInfo } from "net";
-import { type Song, loadSongs } from "./song";
+import { loadSongs } from "./song";
 import { writeFileSync } from "fs";
 import { resolve } from "path";
 import { convertSongToTja } from "./utils";
+import type { Song } from "./types";
 const history = require("connect-history-api-fallback");
 const iconv = require("iconv-lite");
 
@@ -39,7 +40,7 @@ if (!process.env.NODE_ENV) {
 }
 
 app.get("/api/songs", async (req: Request, res: Response, next: NextFunction) => {
-  const songs: Song[] = await loadSongs(SONG_DIR);
+  const songs = await loadSongs(SONG_DIR);
   res.send(songs);
 });
 
@@ -58,7 +59,7 @@ if (process.env.NODE_ENV) {
 } else {
   const server = app.listen(0, () => {
     const address = server.address() as AddressInfo;
-    console.log(`- opentaiko启动 作者：Roanne（滑滑） B站：https://space.bilibili.com/23383232`);
+    console.log(`- opentaiko-tool启动 作者：Roanne（滑滑） B站：https://space.bilibili.com/23383232`);
     console.log(`- 正在打开网页`);
     exec(`start http://localhost:${address.port}`);
     console.log(`- 如意外关闭请重新打开网页：http://localhost:${address.port}`);

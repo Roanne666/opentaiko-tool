@@ -17,16 +17,18 @@
 
 <template>
   <n-layout has-sider style="padding-top: 20px; height: 99vh">
-    <transition v-show="!isInGame" name="sider">
+    <transition v-show="!hideSideBar" name="sider">
       <n-layout-sider bordered width="220" content-style="padding-left: 24px;padding-right:10px">
         <n-menu :options="menuOptions" default-value="score" />
       </n-layout-sider>
     </transition>
 
     <n-layout>
-      <n-layout-content content-style="padding-left: 24px;padding-right:24px;height:100vh">
-        <RouterView />
-      </n-layout-content>
+      <n-message-provider>
+        <n-layout-content content-style="padding-left: 24px;padding-right:24px;height:100vh">
+          <RouterView />
+        </n-layout-content>
+      </n-message-provider>
     </n-layout>
   </n-layout>
 </template>
@@ -34,7 +36,7 @@
 <script setup lang="ts">
 import "@/assets/base.css";
 import { RouterLink, RouterView } from "vue-router";
-import { NLayout, NLayoutSider, NLayoutContent, NMenu, type MenuOption, NIcon } from "naive-ui";
+import { NLayout, NLayoutSider, NLayoutContent, NMenu, type MenuOption, NIcon, NMessageProvider } from "naive-ui";
 import {
   HomeOutline as HomeIcon,
   MusicalNotesOutline as MusicIcon,
@@ -44,7 +46,7 @@ import {
 import { Edit as EditIcon } from "@vicons/carbon";
 import { h, type Component, Transition } from "vue";
 import { fetchAllSongs } from "@/scripts/stores/song";
-import { isInGame } from "./scripts/stores/global";
+import { hideSideBar } from "./scripts/stores/global";
 
 fetchAllSongs();
 
@@ -53,7 +55,7 @@ const menuOptions: MenuOption[] = [
   createMenuOption("谱面成绩", "/score", MusicIcon),
   createMenuOption("谱面预览", "/preview", PreviewIcon),
   createMenuOption("谱面编辑", "/edit", EditIcon),
-  createMenuOption("乐曲游玩", "/game", GameIcon),
+  //createMenuOption("乐曲游玩（开发中）", "/game", GameIcon),
 ];
 
 function createMenuOption(text: string, to: string, icon: Component) {
