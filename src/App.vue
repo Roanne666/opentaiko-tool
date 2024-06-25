@@ -53,7 +53,7 @@ const menuOptions: MenuOption[] = [
   createMenuOption("谱面成绩", "/score", MusicIcon),
   createMenuOption("谱面预览", "/preview", PreviewIcon),
   createMenuOption("谱面编辑", "/edit", EditIcon),
-  createMenuOption("乐曲游玩（开发中）", "/game", GameIcon),
+  //createMenuOption("乐曲游玩（开发中）", "/game", GameIcon),
 ];
 
 function createMenuOption(text: string, to: string, icon: Component) {
