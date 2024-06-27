@@ -117,8 +117,6 @@ const isUpdating = ref(false);
 onMounted(() => {
   const editElement = document.querySelector("textarea");
   const lineSpan = document.querySelector(".line-display");
-  const startTop = 28;
-  const interval = 22;
   if (editElement) {
     editElement.onclick = (e) => {
       if (lineSpan) lineSpan.setAttribute("style", `top:${e.offsetY - 10}px;`);
@@ -187,6 +185,7 @@ async function backToSongs() {
   await new Promise((resolve) => setTimeout(() => resolve(true), 250));
   currentSong.value = undefined;
   updateCount.value = 0;
+  currentBar.value = 0;
 }
 
 async function updateBeatmap(type: "blur" | "input") {
