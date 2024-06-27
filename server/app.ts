@@ -35,7 +35,7 @@ app.use(
 );
 
 if (!process.env.NODE_ENV) {
-  app.use(express.static("web"));
+  app.use(express.static("views"));
   app.use(express.static(".."));
 }
 

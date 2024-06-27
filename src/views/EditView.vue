@@ -19,6 +19,11 @@
 .back-songs:hover {
   cursor: pointer;
 }
+
+.line-display {
+  position: absolute;
+  left: 80px;
+}
 </style>
 
 <template>
@@ -28,6 +33,7 @@
     </n-flex>
   </transition>
 
+  <span v-show="currentBar > 0" class="line-display">小节数：{{ currentBar }}</span>
   <transition v-show="isEdit" name="slide-fade">
     <n-flex justify="center">
       <n-flex vertical style="width: 550px; margin-left: 50px; margin-right: 20px">
@@ -36,7 +42,8 @@
           placeholder="请输入谱面内容"
           :resizable="false"
           v-model:value="beatmapInput"
-          @input="updateBeatmap"
+          @input="updateBeatmap('input')"
+          @blur="updateBeatmap('blur')"
           style="height: 90vh"
         />
         <n-flex style="margin-top: 10px" justify="center">
@@ -49,8 +56,8 @@
             </n-space>
           </n-checkbox-group>
           <n-divider vertical style="height: 100%" />
-          <span>预览延迟：</span>
-          <n-switch v-model:value="previewDelay" />
+          <span>实时预览：</span>
+          <n-switch v-model:value="autoParse" />
           <n-divider vertical style="height: 100%" />
           <n-button :disabled="isUpdating" @click="saveSong" style="margin-top: -5px">保存谱面</n-button>
         </n-flex>
@@ -74,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { Transition, h, ref } from "vue";
+import { Transition, h, onMounted, ref } from "vue";
 import {
   NButton,
   NIcon,
@@ -93,7 +100,6 @@ import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
 import type { DifficlutyType, DifficultyInfo, Song } from "@server/types";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
 import SongTable from "@/components/SongTable.vue";
-import { Throttler } from "@/scripts/utils";
 import { hideSideBar } from "@/scripts/stores/global";
 import PreviewCanvas from "@/components/PreviewCanvas.vue";
 
@@ -101,12 +107,35 @@ const currentSong = ref<Song>();
 const currentDifficulty = ref<DifficlutyType>("oni");
 const updateCount = ref(0);
 const showOptions = ref<string[]>(["bar"]);
-
 const isEdit = ref(false);
 
 const beatmapInput = ref("");
-const previewDelay = ref(true);
+const currentBar = ref(0);
+const autoParse = ref(true);
 const isUpdating = ref(false);
+
+onMounted(() => {
+  const editElement = document.querySelector("textarea");
+  const lineSpan = document.querySelector(".line-display");
+  const startTop = 28;
+  const interval = 22;
+  if (editElement) {
+    editElement.onclick = (e) => {
+      if (lineSpan) lineSpan.setAttribute("style", `top:${e.offsetY - 10}px;`);
+      let bar = 1;
+      let end = editElement.selectionEnd;
+      const lines = beatmapInput.value.split("\n");
+      for (const line of lines) {
+        end -= line.length;
+        if (end <= 0) {
+          currentBar.value = bar;
+          return;
+        }
+        if (line.includes(",")) bar += 1;
+      }
+    };
+  }
+});
 
 const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
   ...basicColumns,
@@ -160,19 +189,13 @@ async function backToSongs() {
   updateCount.value = 0;
 }
 
-async function updateBeatmap() {
-  const throttle = new Throttler(previewDelay.value ? 1 : 0);
-  isUpdating.value = true;
-  const status = await throttle.update();
-  if (status) {
-    if (!currentSong.value) return;
-
-    const d = currentSong.value.difficulties.find((d) => d.name === currentDifficulty.value) as DifficultyInfo;
-    d.beatmapData = beatmapInput.value.split("\n");
-
-    updateCount.value += 1;
-    isUpdating.value = false;
-  }
+async function updateBeatmap(type: "blur" | "input") {
+  if (!currentSong.value) return;
+  if (type === "input" && !autoParse.value) return;
+  if (type === "blur" && autoParse.value) return;
+  const d = currentSong.value.difficulties.find((d) => d.name === currentDifficulty.value) as DifficultyInfo;
+  d.beatmapData = beatmapInput.value.split("\n");
+  updateCount.value += 1;
 }
 
 const message = useMessage();

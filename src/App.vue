@@ -41,7 +41,7 @@ import {
   HomeOutline as HomeIcon,
   MusicalNotesOutline as MusicIcon,
   BarcodeOutline as PreviewIcon,
-  GameControllerOutline as GameIcon,
+  CompassOutline as GuideIcon,
 } from "@vicons/ionicons5";
 import { Edit as EditIcon } from "@vicons/carbon";
 import { h, type Component, Transition } from "vue";
@@ -51,11 +51,10 @@ import { hideSideBar } from "./scripts/stores/global";
 fetchAllSongs();
 
 const menuOptions: MenuOption[] = [
-  createMenuOption("主页", "/", HomeIcon),
-  createMenuOption("谱面成绩", "/score", MusicIcon),
+  createMenuOption("使用指南", "/", GuideIcon),
+  createMenuOption("乐曲成绩", "/score", MusicIcon),
   createMenuOption("谱面预览", "/preview", PreviewIcon),
   createMenuOption("谱面编辑", "/edit", EditIcon),
-  //createMenuOption("乐曲游玩（开发中）", "/game", GameIcon),
 ];
 
 function createMenuOption(text: string, to: string, icon: Component) {
