@@ -24,21 +24,13 @@
 <template>
   <transition v-show="!currentSong" @after-leave="isEdit = true" name="slide-fade">
     <n-flex vertical justify="center">
-      <song-table
-        :use-score="false"
-        :columns="columns"
-        @change-options="
-          (options) => {
-            showOptions = options;
-          }
-        "
-      ></song-table>
+      <song-table :use-score="false" :columns="columns"></song-table>
     </n-flex>
   </transition>
 
   <transition v-show="isEdit" name="slide-fade">
     <n-flex justify="center">
-      <n-flex vertical style="width: 450px; margin-left: 50px; margin-right: 20px">
+      <n-flex vertical style="width: 550px; margin-left: 50px; margin-right: 20px">
         <n-input
           type="textarea"
           placeholder="请输入谱面内容"
@@ -48,16 +40,19 @@
           style="height: 90vh"
         />
         <n-flex style="margin-top: 10px" justify="center">
-          <n-button :disabled="isUpdating" @click="saveSong" style="margin-top: -5px">保存谱面</n-button>
+          <n-checkbox-group v-model:value="showOptions" style="margin-right: -10px">
+            <n-space item-style="display: flex;">
+              <span style="margin-right: -2px">显示：</span>
+              <n-checkbox value="bar" label="小节数" style="margin-right: -5px" />
+              <n-checkbox value="bpm" label="bpm" style="margin-right: -5px" />
+              <n-checkbox value="hs" label="hs" />
+            </n-space>
+          </n-checkbox-group>
           <n-divider vertical style="height: 100%" />
           <span>预览延迟：</span>
-          <n-slider
-            v-model:value="previewDelay"
-            :step="0.5"
-            :max="2"
-            :min="0"
-            style="width: 200px; padding-top: 10px"
-          />
+          <n-switch v-model:value="previewDelay" />
+          <n-divider vertical style="height: 100%" />
+          <n-button :disabled="isUpdating" @click="saveSong" style="margin-top: -5px">保存谱面</n-button>
         </n-flex>
       </n-flex>
 
@@ -87,9 +82,12 @@ import {
   type DataTableColumnGroup,
   NFlex,
   NInput,
-  NSlider,
+  NSwitch,
   NDivider,
   useMessage,
+  NCheckbox,
+  NCheckboxGroup,
+  NSpace,
 } from "naive-ui";
 import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
 import type { DifficlutyType, DifficultyInfo, Song } from "@server/types";
@@ -102,12 +100,12 @@ import PreviewCanvas from "@/components/PreviewCanvas.vue";
 const currentSong = ref<Song>();
 const currentDifficulty = ref<DifficlutyType>("oni");
 const updateCount = ref(0);
-const showOptions = ref<string[]>([]);
+const showOptions = ref<string[]>(["bar"]);
 
 const isEdit = ref(false);
 
 const beatmapInput = ref("");
-const previewDelay = ref(1);
+const previewDelay = ref(true);
 const isUpdating = ref(false);
 
 const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [
@@ -162,8 +160,8 @@ async function backToSongs() {
   updateCount.value = 0;
 }
 
-const throttle = new Throttler(previewDelay);
 async function updateBeatmap() {
+  const throttle = new Throttler(previewDelay.value ? 1 : 0);
   isUpdating.value = true;
   const status = await throttle.update();
   if (status) {
