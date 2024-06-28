@@ -13,7 +13,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "bundle/views",
+    outDir: "view_dist",
   },
   server: {
     hmr: true,
