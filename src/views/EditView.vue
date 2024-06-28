@@ -33,7 +33,10 @@
     </n-flex>
   </transition>
 
-  <span v-show="currentBar > 0" class="line-display">小节数：{{ currentBar }}</span>
+  <n-popover trigger="manual" :show="showPopover" :show-arrow="false" :x="mouseX" :y="mouseY">
+    <span>小节数：{{ currentBar }}</span>
+  </n-popover>
+
   <transition v-show="isEdit" name="slide-fade">
     <n-flex justify="center">
       <n-flex vertical style="width: 550px; margin-left: 50px; margin-right: 20px">
@@ -44,8 +47,10 @@
           v-model:value="beatmapInput"
           @input="updateBeatmap('input')"
           @blur="updateBeatmap('blur')"
+          @click="handleClick"
           style="height: 90vh"
         />
+
         <n-flex style="margin-top: 10px" justify="center">
           <n-checkbox-group v-model:value="showOptions" style="margin-right: -10px">
             <n-space item-style="display: flex;">
@@ -95,6 +100,7 @@ import {
   NCheckbox,
   NCheckboxGroup,
   NSpace,
+  NPopover,
 } from "naive-ui";
 import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
 import type { DifficlutyType, DifficultyInfo, Song } from "@server/types";
@@ -106,7 +112,7 @@ import PreviewCanvas from "@/components/PreviewCanvas.vue";
 const currentSong = ref<Song>();
 const currentDifficulty = ref<DifficlutyType>("oni");
 const updateCount = ref(0);
-const showOptions = ref<string[]>(["bar"]);
+const showOptions = ref<string[]>(["bar", "bpm", "hs"]);
 const isEdit = ref(false);
 
 const beatmapInput = ref("");
@@ -119,6 +125,8 @@ onMounted(() => {
   const lineSpan = document.querySelector(".line-display");
   if (editElement) {
     editElement.onclick = (e) => {
+      mouseX.value = e.offsetY;
+      mouseY.value = e.offsetY;
       if (lineSpan) lineSpan.setAttribute("style", `top:${e.offsetY - 10}px;`);
       let bar = 1;
       let end = editElement.selectionEnd;
@@ -158,21 +166,19 @@ function createDiffultyColumn(title: string, key: DifficlutyType): DataTableColu
         width: 110,
         render(row, rowIndex) {
           const d = row.difficulties.find((d) => d.name === key);
-          if (d && d.level !== 0) {
-            return h(
-              NButton,
-              {
-                onClick() {
-                  currentSong.value = row;
-                  currentDifficulty.value = key;
-                  beatmapInput.value = d.beatmapData.join("\n");
-                  hideSideBar.value = true;
-                },
+          if (d?.level === undefined) return "";
+          return h(
+            NButton,
+            {
+              onClick() {
+                currentSong.value = row;
+                currentDifficulty.value = key;
+                beatmapInput.value = d.beatmapData.join("\n");
+                hideSideBar.value = true;
               },
-              () => "编辑"
-            );
-          }
-          return "";
+            },
+            () => "编辑"
+          );
         },
       },
     ],
@@ -217,6 +223,25 @@ async function saveSong() {
     message.success("保存成功");
   } else {
     message.success("保存失败，请手动保存");
+  }
+}
+
+// 小节数提示
+const showPopover = ref(false);
+const mouseX = ref(0);
+const mouseY = ref(0);
+const refresh = ref(false);
+async function handleClick(e: MouseEvent) {
+  mouseX.value = e.clientX;
+  mouseY.value = e.clientY;
+
+  if (showPopover.value) refresh.value = true;
+  showPopover.value = true;
+  await new Promise((resolve) => setTimeout(() => resolve(true), 1000));
+  if (refresh.value) {
+    refresh.value = false;
+  } else {
+    showPopover.value = false;
   }
 }
 </script>
