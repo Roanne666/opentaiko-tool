@@ -38,16 +38,6 @@
       </n-space>
     </n-radio-group>
   </div>
-  <div>
-    <n-checkbox-group v-model:value="options">
-      <n-space item-style="display: flex;">
-        <span style="margin-right: -2px">设置：</span>
-        <n-checkbox value="bar" label="显示小节数" />
-        <n-checkbox value="bpm" label="显示bpm" />
-        <n-checkbox value="hs" label="显示hs" />
-      </n-space>
-    </n-checkbox-group>
-  </div>
 
   <n-data-table
     :columns="props.columns"
@@ -95,17 +85,12 @@ const genreSelect = ref(genres);
 const difficultySelect = ref<DifficultyTypes>("all");
 const levelSelect = ref<LevelTypes>(0);
 const scoreSelcet = ref<ScoreTypes>("全部");
-const options = ref<string[]>(["bar"]);
 
 const emit = defineEmits<{ changeOptions: [options: string[]] }>();
 
 onMounted(() => {
   showSongs.length = 0;
   showSongs.push(...allSongs);
-});
-
-watch(options, () => {
-  emit("changeOptions", options.value);
 });
 
 watch([genreSelect, difficultySelect, levelSelect, scoreSelcet], () => {

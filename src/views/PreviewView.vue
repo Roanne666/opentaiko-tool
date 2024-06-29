@@ -24,15 +24,15 @@
 <template>
   <transition v-show="!currentSong" @after-leave="isPreview = true" name="slide-fade">
     <n-flex vertical justify="center">
-      <song-table
-        :use-score="false"
-        :columns="columns"
-        @change-options="
-          (options) => {
-            showOptions = options;
-          }
-        "
-      />
+      <n-checkbox-group v-model:value="showOptions">
+        <n-space item-style="display: flex;">
+          <span style="margin-right: -2px">显示：</span>
+          <n-checkbox value="bar" label="小节数" />
+          <n-checkbox value="bpm" label="bpm" />
+          <n-checkbox value="hs" label="hs" />
+        </n-space>
+      </n-checkbox-group>
+      <song-table :use-score="false" :columns="columns" />
     </n-flex>
   </transition>
 
@@ -54,7 +54,16 @@
 
 <script setup lang="ts">
 import { Transition, h, ref } from "vue";
-import { NButton, NIcon, type DataTableColumn, type DataTableColumnGroup, NFlex } from "naive-ui";
+import {
+  NButton,
+  NIcon,
+  type DataTableColumn,
+  type DataTableColumnGroup,
+  NFlex,
+  NCheckbox,
+  NCheckboxGroup,
+  NSpace,
+} from "naive-ui";
 import { basicColumns, createlevelSubCloumn } from "@/scripts/stores/song";
 import type { DifficlutyType, Song } from "@server/types";
 import { ArrowBackCircleOutline as BackIcon } from "@vicons/ionicons5";
@@ -64,7 +73,7 @@ import PreviewCanvas from "@/components/PreviewCanvas.vue";
 const currentSong = ref<Song>();
 const currentDifficulty = ref<DifficlutyType>("oni");
 
-const showOptions = ref<string[]>([]);
+const showOptions = ref<string[]>(["bar"]);
 const isPreview = ref(false);
 
 const columns: (DataTableColumn<Song> | DataTableColumnGroup<Song>)[] = [

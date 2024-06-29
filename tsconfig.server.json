@@ -4,13 +4,13 @@
   "compilerOptions": {
     "module": "NodeNext",
     "target": "ES5",
-    "lib": ["ES6","DOM"],
+    "lib": ["ES6", "DOM"],
     "declaration": false,
     "esModuleInterop": true,
     "removeComments": true,
     "strict": true,
     "rootDir": "server",
-    "outDir": "server_dist",
+    "outDir": "dist/server",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./server/*"]

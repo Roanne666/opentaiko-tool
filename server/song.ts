@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { isDir } from "./utils";
 import iconv from "iconv-lite";
-import { Song, DifficlutyType, DifficultyInfo } from "./types";
+import type { Song, DifficlutyType, DifficultyInfo } from "./types";
 
 const DEFAULT_EXCLUDE = ["S1 Dan-i Dojo", "S2 Taiko Towers", "X1 Favorite", "X2 Recent", "X3 Search By Difficulty"];
 
