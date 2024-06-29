@@ -13,7 +13,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "view_dist",
+    outDir: "dist/views",
   },
   server: {
     hmr: true,

@@ -35,7 +35,7 @@ npm run dev
 npm run start
 ```
 
-### 打包成exe文件
+### 打包前后端
 
 ```sh
 npm run build
